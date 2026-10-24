@@ -9,6 +9,7 @@ import dev.giack.teslawear.core.usage.UsageMeter
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class StatusRefresherTest {
     private val now = 1_792_238_400_000L
@@ -71,12 +72,23 @@ class StatusRefresherTest {
         assertEquals(1, cloud.api.dataCalls)
     }
 
+    // An asleep answer keeps the old data date, so the check time is what makes the state fresh.
+    @Test fun appOpenDoesNotAskAgainRightAfterFindingTheCarAsleep() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val cloud = FakeCloud()
+        val r = refresher(FakeBle(), cloud, store)
+        r.refresh(RefreshTrigger.APP_OPEN)
+        r.refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(1, store.snapshot!!.updatedAtMs)
+    }
+
     @Test fun appOpenKeepsSnapshotWhenAsleep() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
         val cloud = FakeCloud()
         val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.APP_OPEN)
         // Fleet API has no data for a sleeping car: the stored data stays, with its age, marked asleep.
-        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result)
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true, checkedAtMs = now), result)
         assertEquals(result, store.snapshot)
         assertEquals(0, cloud.api.wakes)
     }
@@ -94,8 +106,10 @@ class StatusRefresherTest {
     @Test fun manualRefreshGivesUpWhenTheCarDoesNotWake() = runTest {
         val cloud = FakeCloud().apply { api.states += FleetResult.Ok("asleep") }
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
-        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.MANUAL)
-        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result)
+        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.MANUAL)!!
+        // Checked when the wake attempt gave up, after the waiting.
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result.copy(checkedAtMs = null))
+        assertTrue(result.checkedAtMs!! > now)
         assertEquals(1, cloud.api.dataCalls)
     }
 

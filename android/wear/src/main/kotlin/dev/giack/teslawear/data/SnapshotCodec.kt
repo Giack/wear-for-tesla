@@ -12,6 +12,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 
 object SnapshotCodec {
     fun encode(s: Snapshot): String = buildJsonObject {
@@ -27,6 +28,7 @@ object SnapshotCodec {
         s.trunkOpen?.let { put("trunk", JsonPrimitive(it)) }
         s.asleep?.let { put("asleep", JsonPrimitive(it)) }
         put("at", JsonPrimitive(s.updatedAtMs))
+        s.checkedAtMs?.let { put("checked", JsonPrimitive(it)) }
         put("channel", JsonPrimitive(s.channel.name))
     }.toString()
 
@@ -37,6 +39,7 @@ object SnapshotCodec {
             climateOn = o.bool("climate"), insideTempC = o.float("inside"), setTempC = o.float("set"),
             chargePortOpen = o.bool("port"), charging = o.bool("charging"), windowsOpen = o.bool("windows"),
             trunkOpen = o.bool("trunk"), asleep = o.bool("asleep"), updatedAtMs = o.getValue("at").jsonPrimitive.long,
+            checkedAtMs = o["checked"]?.jsonPrimitive?.longOrNull,
             channel = Channel.valueOf(o.getValue("channel").jsonPrimitive.content),
         )
     }.getOrNull()

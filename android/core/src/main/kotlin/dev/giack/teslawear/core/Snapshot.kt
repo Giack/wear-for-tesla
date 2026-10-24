@@ -20,6 +20,8 @@ data class Snapshot(
     /** The car was asleep at the last check: the other fields date from before it fell asleep. */
     val asleep: Boolean? = null,
     val updatedAtMs: Long,
+    /** Last time the car was asked, asleep answers included (those keep [updatedAtMs]); null if never. */
+    val checkedAtMs: Long? = null,
     val channel: Channel,
     /** Configuration read through Fleet mode; not persisted (the Setup state keeps the car profile). */
     val carConfig: FleetCarConfig? = null,
@@ -38,8 +40,12 @@ data class Snapshot(
         trunkOpen = newer.trunkOpen ?: trunkOpen,
         asleep = newer.asleep ?: asleep,
         updatedAtMs = newer.updatedAtMs,
+        checkedAtMs = newer.checkedAtMs ?: checkedAtMs,
         channel = newer.channel,
     )
+
+    /** When the car was last heard from, data or an asleep answer. */
+    val lastCheckMs: Long get() = maxOf(updatedAtMs, checkedAtMs ?: 0)
 }
 
 /** Expected state right after [cmd] succeeded, so surfaces stay correct until the next real read. */

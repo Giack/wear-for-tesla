@@ -41,7 +41,7 @@ class StatusRefresher(
                 if (current != null && nowMs() - current.updatedAtMs < TILE_STALE_MS) null else viaBle(BLE_PROBE_MS)
             RefreshTrigger.CONFIRM_SCREEN -> withTimeoutOrNull(CONFIRM_BUDGET_MS) { viaBle(CONFIRM_BUDGET_MS) }
             RefreshTrigger.APP_OPEN ->
-                viaBle(BLE_PROBE_MS) ?: if (current != null && nowMs() - current.updatedAtMs < APP_OPEN_FRESH_MS) null else viaCloud(current)
+                viaBle(BLE_PROBE_MS) ?: if (current != null && nowMs() - current.lastCheckMs < APP_OPEN_FRESH_MS) null else viaCloud(current)
             RefreshTrigger.AFTER_COMMAND -> viaBle(BLE_PROBE_MS) ?: viaCloud(current)
             RefreshTrigger.MANUAL -> viaBle(MANUAL_BLE_PROBE_MS) ?: viaCloud(current, wake = true)
         }
@@ -65,7 +65,7 @@ class StatusRefresher(
                 is FleetResult.Ok -> result.value.also { it.carConfig?.let(onCarConfig) }
                 is FleetResult.Error -> null.also { onCloudError(IOException("Fleet API ${result.code}: ${result.message}")) }
                 FleetResult.Asleep ->
-                    if (wake && cloud.wakeAndWait(nowMs, sleep)) viaCloud(current) else current?.copy(asleep = true)
+                    if (wake && cloud.wakeAndWait(nowMs, sleep)) viaCloud(current) else current?.copy(asleep = true, checkedAtMs = nowMs())
             }
         } catch (e: IOException) {
             onCloudError(e)

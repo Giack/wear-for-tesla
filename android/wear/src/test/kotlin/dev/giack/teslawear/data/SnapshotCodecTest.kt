@@ -11,7 +11,7 @@ class SnapshotCodecTest {
         val s = Snapshot(
             batteryPct = 78, rangeKm = 312, locked = true, climateOn = false, insideTempC = 19.5f, setTempC = 21.5f,
             chargePortOpen = false, charging = true, windowsOpen = false, trunkOpen = true, asleep = true,
-            updatedAtMs = 1_792_238_400_000L, channel = Channel.BLE,
+            updatedAtMs = 1_792_238_400_000L, checkedAtMs = 1_792_238_500_000L, channel = Channel.BLE,
         )
         assertEquals(s, SnapshotCodec.decode(SnapshotCodec.encode(s)))
     }
