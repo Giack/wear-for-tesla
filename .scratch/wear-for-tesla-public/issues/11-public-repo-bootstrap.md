@@ -4,9 +4,13 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-human
+**Status:** needs-archive
 
-- [ ] Public repo exists with clean history; personal folders absent and git-ignored
-- [ ] LICENSE, README, PRIVACY.md present
-- [ ] CI green on a test pull request
+- [x] Public repo exists with clean history; personal folders absent and git-ignored
+- [x] LICENSE, README, PRIVACY.md present
+- [x] CI green on a test pull request
 - [ ] This private repository archived as the build history
+
+## Comments
+
+- 2026-10-24: Created github.com/Giack/wear-for-tesla from a `git archive` of private `7f90660`, single commit authored with the GitHub noreply address; `design/superpowers` (personal-app spec and plan, compositor notes) left out. Audited: no VIN, serials, client credentials, real keys (test PEMs differ), images or Tesla assets. `ci.yml` (test, lint, Public APK) green on push and on test PR #1 (closed). Pending: archive this private repository (it has no remote yet).
