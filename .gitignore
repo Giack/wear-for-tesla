@@ -1,0 +1,25 @@
+.superpowers/
+.impeccable/
+*.pem
+*.key
+local.properties
+secrets/
+.gradle/
+build/
+.idea/
+.DS_Store
+.kotlin/
+bin/
+build-cli/
+
+# Personal build: Tesla-owned material (logo, Official renders and their tools); never commit (ADR-0002)
+# (symlinks into the private wear-for-tesla-personal repo, hence no trailing slash)
+android/wear/src/personal
+android/wear/src/testPersonal
+setup/personal
+
+# Session handoff (contains device serials)
+HANDOFF.md
+
+# MkDocs output
+site/

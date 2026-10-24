@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Terminal Gradle entry point. VS Code's Java extension builds this project in the background;
+# these flags give terminal builds their own outputs, Gradle cache and Kotlin state so the two
+# builds never invalidate or delete each other's work.
+cd "$(dirname "$0")"
+source ./env.sh
+exec ./gradlew --project-cache-dir "$PWD/build-cli/.gradle" -PcliBuild -Pkotlin.project.persistent.dir="$PWD/build-cli/.kotlin" "$@"

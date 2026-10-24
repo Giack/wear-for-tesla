@@ -1,0 +1,64 @@
+# Pushing a tag like v0.1 or v0.1.1 builds the Public APK, signs it with the release key from the
+# repository secrets and attaches it to a GitHub Release. A tag with a suffix (v0.1-rc1) makes a pre-release.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Version from the tag
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)(\.([0-9]+))?(-[0-9A-Za-z.]+)?$ ]] || { echo "bad tag $TAG"; exit 1; }
+          # versionCode grows with every release, so each APK installs over the previous one.
+          code=$(( BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 1000 + ${BASH_REMATCH[4]:-0} ))
+          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$([[ -n "${BASH_REMATCH[5]}" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and sign
+        working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.WEAR_KEYSTORE_BASE64 }}
+          WEAR_KEYSTORE_PASSWORD: ${{ secrets.WEAR_KEYSTORE_PASSWORD }}
+          WEAR_KEY_ALIAS: ${{ secrets.WEAR_KEY_ALIAS }}
+          WEAR_KEY_PASSWORD: ${{ secrets.WEAR_KEY_PASSWORD }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          export WEAR_KEYSTORE="$RUNNER_TEMP/release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$WEAR_KEYSTORE"
+          ./gradlew test :wear:assemblePublicRelease -PversionName="$VERSION_NAME" -PversionCode="$VERSION_CODE"
+          rm -f "$WEAR_KEYSTORE"
+          apk=wear/build/outputs/apk/public/release/wear-public-release.apk
+          # Refuse to publish an APK that fell back to the debug key.
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" | tee certs.txt
+          ! grep -q "CN=Android Debug" certs.txt
+          cp "$apk" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          flags=(--generate-notes --title "Wear for Tesla $VERSION_NAME")
+          [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
+          gh release create "$TAG" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk" "${flags[@]}"

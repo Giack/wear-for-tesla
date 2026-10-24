@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Side profile of a Model Y-like crossover, flat fills (Ultra Red), from the approved mockup. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="74dp"
+    android:viewportWidth="200"
+    android:viewportHeight="74">
+    <path android:fillColor="#000000" android:fillAlpha="0.85"
+        android:pathData="M8,66a92,5 0 1,0 184,0a92,5 0 1,0 -184,0z" />
+    <path android:fillColor="#B3141C"
+        android:pathData="M10,54C6,50 6,44 9,41C14,37 30,34 44,32C56,24 70,16 84,14C104,11 126,12 140,15C156,19 170,26 182,32C190,35 194,40 194,47C194,51 192,54 188,55L171,55A17,17 0 0,0 139,55L63,55A17,17 0 0,0 31,55Z" />
+    <path android:fillColor="#D23A40" android:fillAlpha="0.55"
+        android:pathData="M44,32C56,24 70,16 84,14C104,11 126,12 140,15C156,19 170,26 182,32L182,34L44,34Z" />
+    <path android:fillColor="#14171C" android:pathData="M58,32C68,22 78,18 90,17L118,16.5L121,32Z" />
+    <path android:fillColor="#14171C" android:pathData="M125,16.8C140,18 153,23 166,31L127,32Z" />
+    <path android:strokeColor="#FFFFFF" android:strokeAlpha="0.6" android:strokeWidth="0.6" android:pathData="M44,33L182,33" />
+    <path android:strokeColor="#E3483A" android:strokeWidth="1.6" android:strokeLineCap="round" android:pathData="M180,41L192,42" />
+    <path android:fillColor="#0A0A0A" android:pathData="M34,55a13,13 0 1,0 26,0a13,13 0 1,0 -26,0z" />
+    <path android:fillColor="#0A0A0A" android:pathData="M142,55a13,13 0 1,0 26,0a13,13 0 1,0 -26,0z" />
+    <path android:fillColor="#4A4D53" android:pathData="M39,55a8,8 0 1,0 16,0a8,8 0 1,0 -16,0z" />
+    <path android:fillColor="#4A4D53" android:pathData="M147,55a8,8 0 1,0 16,0a8,8 0 1,0 -16,0z" />
+</vector>

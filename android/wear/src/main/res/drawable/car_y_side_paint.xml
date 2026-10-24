@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Car illustration, Model Y side view, paint layer (project-owned, Apache-2.0; see ILLUSTRATIONS.md).
+     White = paint colour, greys = shaded paint: the app multiplies this layer by the car's paint. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp" android:height="100dp" android:viewportWidth="200" android:viewportHeight="100">
+    <!-- ground shadow (black stays black when multiplied) -->
+    <path android:fillColor="#000000" android:fillAlpha="0.55"
+        android:pathData="M8,86a92,4 0 1,0 184,0a92,4 0 1,0 -184,0z" />
+    <!-- body -->
+    <path android:fillColor="#FFFFFF" android:pathData="M10,70C9,62 12,57 20,55C30,52 42,50 54,48L62,46C76,33 92,25 110,24C134,23 156,27 172,36C182,41 188,47 190,54C191,60 191,66 189,70L166,71A14,14 0 0,0 138,71L60,71A14,14 0 0,0 32,71L13,71C11,71 10,71 10,70Z" />
+    <!-- lower side in shade -->
+    <path android:fillColor="#B0B0B0" android:pathData="M11.5,64L190.6,60C190.8,64 190.4,67 189,70L166,71A14,14 0 0,0 138,71L60,71A14,14 0 0,0 32,71L13,71C11,71 10.5,68 11.5,64Z" />
+</vector>

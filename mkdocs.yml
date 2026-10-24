@@ -1,0 +1,51 @@
+site_name: Wear for Tesla
+site_description: Control your Tesla from a Wear OS watch, over Bluetooth and optionally through the Fleet API.
+site_url: https://giack.github.io/wear-for-tesla/
+repo_url: https://github.com/Giack/wear-for-tesla
+repo_name: Giack/wear-for-tesla
+copyright: Not affiliated with Tesla, Inc. or Google LLC. Apache License 2.0.
+
+# Only the user-facing pages live in docs/; design notes, ADRs and plans are in design/.
+docs_dir: docs
+strict: true
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: red
+      toggle:
+        icon: material/weather-night
+        name: Dark theme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: red
+      toggle:
+        icon: material/weather-sunny
+        name: Light theme
+  features:
+    - navigation.footer
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Install the app: install.md
+  - Bluetooth mode: bluetooth-mode.md
+  - Fleet mode: fleet-mode.md
+  - Fleet API budget: budget.md
+  - Troubleshooting: troubleshooting.md
+  - Privacy: privacy.md
+  - Disclaimer: disclaimer.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true

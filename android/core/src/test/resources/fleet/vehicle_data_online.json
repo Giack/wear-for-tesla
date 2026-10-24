@@ -1,0 +1,4 @@
+{"response":{"id":1492931234567890,"vin":"XP7YGCEK0SB000000","state":"online",
+ "charge_state":{"battery_level":78,"battery_range":193.9,"charge_port_door_open":false,"charging_state":"Disconnected"},
+ "climate_state":{"inside_temp":19.0,"outside_temp":12.5,"is_climate_on":false,"driver_temp_setting":21.5},
+ "vehicle_state":{"locked":true,"fd_window":0,"fp_window":0,"rd_window":0,"rp_window":0,"rt":0,"ft":0}}}

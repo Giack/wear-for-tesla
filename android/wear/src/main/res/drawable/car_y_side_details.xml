@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Car illustration, Model Y side view, fixed details over the paint layer (project-owned, Apache-2.0). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp" android:height="100dp" android:viewportWidth="200" android:viewportHeight="100">
+    <!-- light edge along the roofline, so dark paints still read on a black watch face -->
+    <path android:strokeColor="#FFFFFF" android:strokeAlpha="0.35" android:strokeWidth="0.8" android:strokeLineCap="round"
+        android:pathData="M20,55C30,52 42,50 54,48L62,46C76,33 92,25 110,24C134,23 156,27 172,36C182,41 188,47 190,54" />
+    <!-- glass -->
+    <path android:fillColor="#14171C" android:pathData="M64,46C78,34.5 93,27.5 110,27C132,26.5 152,30.5 166,38.5L174,45.5Z" />
+    <!-- pillar between front and rear glass -->
+    <path android:strokeColor="#2A2E35" android:strokeWidth="2.2" android:pathData="M112,27L111,46" />
+    <!-- mirror -->
+    <path android:fillColor="#14171C" android:pathData="M66,46.5L59,45.5L60,49.5Z" />
+    <!-- door lines and handles -->
+    <path android:strokeColor="#000000" android:strokeAlpha="0.28" android:strokeWidth="0.6"
+        android:pathData="M110,47L109,70M150,47L148,68" />
+    <path android:strokeColor="#000000" android:strokeAlpha="0.35" android:strokeWidth="1.2" android:strokeLineCap="round"
+        android:pathData="M90,52L98,52M128,52L136,52" />
+    <!-- sill -->
+    <path android:strokeColor="#000000" android:strokeAlpha="0.3" android:strokeWidth="2"
+        android:pathData="M62,69L136,69" />
+    <!-- headlight and tail light -->
+    <path android:strokeColor="#EEF0F3" android:strokeWidth="1.8" android:strokeLineCap="round" android:pathData="M11,58L22,55.5" />
+    <path android:strokeColor="#C4161C" android:strokeWidth="1.8" android:strokeLineCap="round" android:pathData="M183,47L190,52" />
+    <!-- front wheel -->
+    <path android:fillColor="#0B0C0E" android:pathData="M33.5,73a12.5,12.5 0 1,0 25,0a12.5,12.5 0 1,0 -25,0z" />
+    <path android:fillColor="#3E4248" android:pathData="M37.5,73a8.5,8.5 0 1,0 17,0a8.5,8.5 0 1,0 -17,0z" />
+    <path android:fillColor="#1A1C20" android:pathData="M44,73a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z" />
+    <!-- rear wheel -->
+    <path android:fillColor="#0B0C0E" android:pathData="M139.5,73a12.5,12.5 0 1,0 25,0a12.5,12.5 0 1,0 -25,0z" />
+    <path android:fillColor="#3E4248" android:pathData="M143.5,73a8.5,8.5 0 1,0 17,0a8.5,8.5 0 1,0 -17,0z" />
+    <path android:fillColor="#1A1C20" android:pathData="M150,73a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z" />
+</vector>

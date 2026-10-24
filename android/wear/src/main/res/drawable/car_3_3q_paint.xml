@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Car illustration, Model 3 three-quarter front, paint layer (project-owned, Apache-2.0; see ILLUSTRATIONS.md).
+     White = paint colour, greys = shaded paint: the app multiplies this layer by the car's paint. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp" android:height="100dp" android:viewportWidth="200" android:viewportHeight="100">
+    <!-- ground shadow (black stays black when multiplied) -->
+    <path android:fillColor="#000000" android:fillAlpha="0.55"
+        android:pathData="M8,88a92,5 0 1,0 184,0a92,5 0 1,0 -184,0z" />
+    <!-- body: lower and longer than the Model Y, with a short rear deck -->
+    <path android:fillColor="#FFFFFF" android:pathData="M14,78C12,72 13,66 18,62C24,58 36,55 50,53L62,51C76,40 90,33 106,32C128,31 148,34 162,41C170,45 178,47 186,50C189,53 190,61 189,67C188,72 185,74 182,74L162,74A11.5,11.5 0 0,0 139,74.5L66,78A14.5,14.5 0 0,0 37,78.5L22,79C17,79 14,79 14,78Z" />
+    <!-- front face, turned away from the light -->
+    <path android:fillColor="#CFCFCF"
+        android:pathData="M14,78C12,72 13,66 18,62C24,58 32,56 40,55L36,79L22,79C17,79 14,79 14,78Z" />
+    <!-- lower side in shade -->
+    <path android:fillColor="#B0B0B0"
+        android:pathData="M38,66L189.5,61C189.6,64 189.4,67 189,67C188,72 185,74 182,74L162,74A11.5,11.5 0 0,0 139,74.5L66,78A14.5,14.5 0 0,0 37,78.5L36,78.5Z" />
+</vector>

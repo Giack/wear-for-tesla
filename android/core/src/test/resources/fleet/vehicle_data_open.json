@@ -1,0 +1,4 @@
+{"response":{"state":"online",
+ "charge_state":{"battery_level":55,"battery_range":120.0,"charge_port_door_open":true,"charging_state":"Charging"},
+ "climate_state":{"inside_temp":24.4,"is_climate_on":true,"driver_temp_setting":20.0},
+ "vehicle_state":{"locked":false,"fd_window":0,"fp_window":1,"rd_window":0,"rp_window":0,"rt":1,"ft":0}}}

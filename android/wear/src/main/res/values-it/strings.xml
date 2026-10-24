@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_lock">Blocco</string>
+    <string name="action_climate">Clima</string>
+    <string name="action_frunk">Frunk</string>
+    <string name="action_charge_port">Sportello</string>
+    <string name="action_trunk">Baule</string>
+    <string name="action_windows">Finestrini</string>
+    <string name="action_lights">Luci</string>
+    <string name="action_horn">Clacson</string>
+
+    <string name="command_lock">Blocca</string>
+    <string name="command_unlock">Sblocca</string>
+    <string name="command_climate_on">Accendi clima</string>
+    <string name="command_climate_off">Spegni clima</string>
+    <string name="command_set_temp">Temperatura %1$s</string>
+    <string name="command_open_frunk">Apri frunk</string>
+    <string name="command_open_trunk">Apri baule</string>
+    <string name="command_close_trunk">Chiudi baule</string>
+    <string name="command_open_charge_port">Apri sportello</string>
+    <string name="command_close_charge_port">Chiudi sportello</string>
+    <string name="command_vent_windows">Apri a fessura</string>
+    <string name="command_close_windows">Chiudi finestrini</string>
+    <string name="command_flash_lights">Lampeggia luci</string>
+    <string name="command_honk">Suona clacson</string>
+    <string name="command_wake">Sveglia l\'auto</string>
+    <string name="hold_to_confirm_description">%1$s, tieni premuto</string>
+
+    <string name="age_now">adesso</string>
+    <string name="age_minutes">%1$d min fa</string>
+    <string name="age_hours">%1$d h fa</string>
+    <string name="age_yesterday">ieri</string>
+    <string name="age_days">%1$d g fa</string>
+
+    <string name="progress_running">%1$s…</string>
+    <string name="progress_sending">Invio…</string>
+    <string name="progress_waking_car">Sveglio l\'auto…</string>
+    <string name="outcome_error">Errore: %1$s</string>
+    <string name="outcome_unknown">Esito sconosciuto</string>
+    <string name="outcome_no_connection">Nessuna connessione</string>
+    <string name="outcome_unreachable">Auto non raggiungibile</string>
+    <string name="outcome_sign_in_again">Accedi di nuovo</string>
+    <string name="outcome_out_of_range">Auto fuori portata Bluetooth</string>
+
+    <string name="home_refresh">↻ Aggiorna</string>
+    <string name="home_refreshing">Aggiorno… se dorme la sveglio</string>
+    <string name="home_unreachable_now">Auto non raggiungibile ora</string>
+    <string name="home_updated">aggiornato %1$s</string>
+    <string name="home_asleep">auto in sospensione · dati di %1$s</string>
+    <string name="home_usage">API: %1$.2f $ / %2$.0f $</string>
+    <string name="home_settings">Impostazioni</string>
+    <string name="status_locked">CHIUSA</string>
+    <string name="status_unlocked">APERTA</string>
+    <string name="status_charging">IN CARICA</string>
+    <string name="status_climate_on">CLIMA ACCESO</string>
+    <string name="car_image_description">La tua auto</string>
+    <string name="climate_title">CLIMA</string>
+    <string name="climate_title_on">CLIMA · ACCESO</string>
+    <string name="climate_title_off">CLIMA · SPENTO</string>
+    <string name="climate_inside">interno</string>
+    <string name="climate_set">impostata</string>
+    <string name="climate_lower">Abbassa temperatura</string>
+    <string name="climate_raise">Alza temperatura</string>
+    <string name="climate_turn_on">Accendi</string>
+    <string name="climate_turn_off">Spegni</string>
+
+    <string name="confirm_state_age">stato di %1$s</string>
+    <string name="confirm_state_unknown">stato sconosciuto</string>
+    <string name="confirm_hold">Tieni premuto</string>
+
+    <string name="tile_open_app">Apri l\'app per iniziare</string>
+    <string name="tile_locked">Chiusa</string>
+    <string name="tile_unlocked">Aperta</string>
+    <string name="tile_port">Porta</string>
+
+    <string name="complication_battery_label">Batteria auto</string>
+    <string name="complication_climate_label">Clima auto</string>
+    <string name="complication_battery_description">Batteria auto %1$s</string>
+    <string name="complication_climate_description">Clima %1$s</string>
+    <string name="complication_on">ON</string>
+    <string name="complication_off">OFF</string>
+
+    <string name="profile_model">Modello: %1$s</string>
+    <string name="profile_paint">Colore: %1$s</string>
+    <string name="profile_wheels">Cerchi: %1$s</string>
+    <string name="paint_unset">da scegliere</string>
+    <string name="paint_white">bianco</string>
+    <string name="paint_black">nero</string>
+    <string name="paint_grey">grigio</string>
+    <string name="paint_silver">argento</string>
+    <string name="paint_blue">blu</string>
+    <string name="paint_red">rosso</string>
+    <string name="wheels_standard">standard</string>
+    <string name="wheels_sport">sportivi</string>
+
+    <string name="onboarding_welcome">Benvenuto</string>
+    <string name="onboarding_intro">L\'orologio comanda la tua Tesla da vicino, via Bluetooth: niente account, telefono o computer.\n\nTi serviranno il VIN dell\'auto e la keycard.</string>
+    <string name="onboarding_start">Inizia</string>
+    <string name="onboarding_step_car">1 · La tua auto</string>
+    <string name="onboarding_next">Avanti</string>
+    <string name="onboarding_step_vin">2 · Il VIN</string>
+    <string name="onboarding_vin_help">Lo trovi sullo schermo dell\'auto (Controlli → Software) o alla base del parabrezza. Serve perché ogni comando lo include.</string>
+    <string name="onboarding_enter_vin">Inserisci il VIN</string>
+    <string name="onboarding_vin_input">VIN (17 caratteri)</string>
+    <string name="onboarding_vin_invalid">VIN non valido: 17 caratteri, senza le lettere I, O e Q</string>
+    <string name="onboarding_search">Cerca l\'auto qui vicino</string>
+    <string name="onboarding_searching">Cerco la tua auto…</string>
+    <string name="onboarding_allow_permissions">Consenti i permessi Bluetooth e riprova</string>
+    <string name="onboarding_bluetooth_off">Accendi il Bluetooth dell\'orologio e riprova</string>
+    <plurals name="onboarding_other_teslas">
+        <item quantity="one">Vedo %d Tesla ma nessuna con questo VIN: controllalo</item>
+        <item quantity="many">Vedo %d Tesla ma nessuna con questo VIN: controllalo</item>
+        <item quantity="other">Vedo %d Tesla ma nessuna con questo VIN: controllalo</item>
+    </plurals>
+    <string name="onboarding_no_tesla">Nessuna Tesla vicina: avvicinati all\'auto e riprova</string>
+    <string name="onboarding_location_off">(attiva anche la posizione)</string>
+    <string name="onboarding_step_key">3 · Chiave Bluetooth</string>
+    <string name="onboarding_key_help">Auto trovata ✓\nSiediti in auto con la keycard e tocca Abbina: ti dirò quando appoggiarla.</string>
+    <string name="onboarding_pair">Abbina</string>
+    <string name="onboarding_change_vin">Cambia VIN</string>
+
+    <string name="pairing_sending">Invio la richiesta all\'auto…</string>
+    <string name="pairing_keycard_prompt">Appoggia ORA la keycard sulla console centrale e conferma sullo schermo dell\'auto.\nNessuna richiesta arriverà nell\'app Tesla.</string>
+    <string name="pairing_done">Chiave Bluetooth abbinata ✓</string>
+    <string name="pairing_request_failed">Richiesta non inviata: %1$s</string>
+    <string name="pairing_insufficient_privileges">L\'auto conosce la chiave ma non le dà i permessi</string>
+    <string name="pairing_out_of_range">Auto fuori portata Bluetooth: avvicinati e riprova</string>
+    <string name="pairing_no_reply">L\'auto non risponde: riprova</string>
+    <string name="pairing_not_yet">Chiave non ancora abbinata: riprova e appoggia subito la keycard</string>
+
+    <string name="setup_title">Impostazioni</string>
+    <string name="setup_sign_in">Accedi a Tesla</string>
+    <string name="setup_signed_in">✓ Accesso a Tesla</string>
+    <string name="setup_pair_cloud_key">Abbina la chiave cloud</string>
+    <string name="setup_test_fleet">Prova Fleet API</string>
+    <string name="setup_budget">Budget API: %1$.0f $/mese</string>
+    <string name="setup_this_month">Questo mese: %1$s</string>
+    <string name="setup_usage">%1$.2f $ · %2$s · %3$s · %4$s</string>
+    <plurals name="setup_usage_reads">
+        <item quantity="one">%d lettura</item>
+        <item quantity="many">%d letture</item>
+        <item quantity="other">%d letture</item>
+    </plurals>
+    <plurals name="setup_usage_commands">
+        <item quantity="one">%d comando</item>
+        <item quantity="many">%d comandi</item>
+        <item quantity="other">%d comandi</item>
+    </plurals>
+    <plurals name="setup_usage_wakes">
+        <item quantity="one">%d risveglio</item>
+        <item quantity="many">%d risvegli</item>
+        <item quantity="other">%d risvegli</item>
+    </plurals>
+    <string name="setup_disable_fleet">Disattiva Fleet mode</string>
+    <string name="setup_your_car">La tua auto</string>
+    <string name="setup_remove_car">Rimuovi auto</string>
+    <string name="setup_remove_car_confirm">Conferma: rimuovi auto</string>
+    <string name="setup_diagnostics">Diagnostica</string>
+    <string name="setup_bluetooth_permissions">Permessi Bluetooth</string>
+    <string name="setup_ble_status">Stato BLE</string>
+    <string name="setup_pair_ble_key">Abbina chiave Bluetooth</string>
+    <string name="setup_flash_lights_ble">Lampeggia luci (BLE)</string>
+    <string name="setup_ble_log">Registro BLE</string>
+    <string name="setup_about">Informazioni</string>
+    <string name="setup_continue_on_phone">Continua sul telefono…</string>
+    <string name="setup_signed_in_done">Accesso eseguito</string>
+    <string name="setup_confirm_on_phone">Conferma nell\'app Tesla sul telefono</string>
+    <string name="setup_domain_missing">Dominio mancante: ripeti setup.sh push-watch</string>
+    <string name="setup_fleet_disabled">Fleet mode disattivato: credenziali eliminate, resta il Bluetooth</string>
+    <string name="setup_tap_again_to_remove">Tocca di nuovo per rimuovere l\'auto e la sua chiave</string>
+    <string name="setup_log_empty">Registro vuoto</string>
+    <string name="setup_reading_state">Leggo lo stato…</string>
+    <string name="setup_test_asleep">Auto in sospensione · ultimo dato %1$s %%</string>
+    <string name="setup_test_ok">OK · %1$s %%</string>
+    <string name="setup_test_no_data">Auto addormentata, riprova</string>
+    <string name="diag_searching">Cerco l\'auto via Bluetooth…</string>
+    <string name="diag_not_found">Auto non trovata</string>
+    <string name="diag_permissions_missing">permessi mancanti (tocca Permessi Bluetooth)</string>
+    <string name="diag_bluetooth_off">Bluetooth spento</string>
+    <string name="diag_location_off">posizione spenta</string>
+    <string name="diag_devices_seen">dispositivi visti: %1$d</string>
+    <string name="diag_teslas_nearby">Tesla vicine: %1$d</string>
+    <string name="diag_lights_ok">OK luci via Bluetooth</string>
+    <string name="diag_ble_locked">BLE: chiusa</string>
+    <string name="diag_ble_unlocked">BLE: aperta</string>
+    <string name="diag_status_unreadable">Stato BLE non leggibile</string>
+    <string name="diag_ble_error">Errore BLE: %1$s</string>
+
+    <string name="login_cancelled">Accesso annullato (%1$s)</string>
+    <string name="login_invalid_reply">Risposta di accesso non valida</string>
+    <string name="login_no_code">Nessun codice ricevuto</string>
+    <string name="login_failed">Accesso non riuscito</string>
+
+    <string name="import_done">Segreti importati</string>
+    <string name="import_failed">Importazione fallita</string>
+
+    <string name="about_title">Informazioni</string>
+    <string name="about_version">Versione %1$s</string>
+    <string name="about_licence">Libera e open source con licenza Apache 2.0</string>
+    <string name="about_disclaimer">Non affiliata a Tesla, Inc. né a Google LLC.</string>
+    <string name="about_trademarks">Tesla è un marchio di Tesla, Inc. Wear OS è un marchio di Google LLC.</string>
+</resources>
