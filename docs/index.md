@@ -2,6 +2,25 @@
 
 Wear for Tesla is a free, open-source Wear OS app that shows your Tesla's state on your wrist and sends it commands: lock and unlock, climate, frunk, trunk, charge port, windows, lights and horn. It also gives you a Tile and watch-face complications for the battery and the climate.
 
+<div class="screens" markdown>
+<figure markdown="span">
+![Home screen: Model Y in red, locked, 78% battery](assets/screens/home-model-y.png)
+<figcaption>Home</figcaption>
+</figure>
+<figure markdown="span">
+![Tile with battery, range and four quick actions](assets/screens/tile.png)
+<figcaption>Tile</figcaption>
+</figure>
+<figure markdown="span">
+![Confirmation: Turn climate on, state from 1 min ago, hold to confirm](assets/screens/confirm.png)
+<figcaption>Hold to confirm</figcaption>
+</figure>
+<figure markdown="span">
+![Home screen: Model 3 in blue, unlocked, climate on](assets/screens/home-model-3.png)
+<figcaption>Your model and paint</figcaption>
+</figure>
+</div>
+
 !!! warning "Not affiliated with Tesla, Inc. or Google LLC"
     This is an independent project. See the [disclaimer](disclaimer.md).
 
