@@ -49,6 +49,28 @@ class StatusRefresherTest {
         assertEquals(80, result!!.batteryPct)
     }
 
+    // The app comes to the foreground often: a state read a minute ago is not worth a billed call.
+    @Test fun appOpenSkipsCloudWhenTheStateIsFresh() = runTest {
+        val stored = snap(batteryPct = 50, updatedAtMs = now - 60_000)
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        val result = refresher(FakeBle(), cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(stored, result)
+    }
+
+    @Test fun appOpenStillTriesBluetoothWhenTheStateIsFresh() = runTest {
+        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val result = refresher(ble, FakeCloud(), MemorySnapshots(snap(locked = false, updatedAtMs = now - 60_000)))
+            .refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(true, result!!.locked)
+    }
+
+    @Test fun afterCommandReadsCloudEvenWhenTheStateIsFresh() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = now - 60_000))).refresh(RefreshTrigger.AFTER_COMMAND)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
     @Test fun appOpenKeepsSnapshotWhenAsleep() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
         val cloud = FakeCloud()

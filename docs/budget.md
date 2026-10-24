@@ -30,4 +30,4 @@ Tap **Settings → API budget** to cycle through $2, $5, $10, $20 and $50 a mont
 
 ## Keeping usage low
 
-The app already avoids the expensive parts: it never polls the Fleet API in the background, the Tile and confirmation screen read only over Bluetooth, and it wakes the car only for a command you confirmed. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.
+The app already avoids the expensive parts: it never polls the Fleet API in the background, the Tile and confirmation screen read only over Bluetooth, opening the app reads over the cloud only when the state on screen is more than two minutes old, and it wakes the car only for a command you confirmed. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.

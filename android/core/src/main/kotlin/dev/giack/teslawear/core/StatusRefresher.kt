@@ -17,7 +17,7 @@ enum class RefreshTrigger {
 
 /**
  * Refresh policy: Tile and confirm screen only read over BLE (free); app open and post-command
- * may read over Fleet API unless the monthly budget is exhausted. Only a manual refresh wakes the car.
+ * may read over Fleet API unless the monthly budget is exhausted (app open only when the state is not fresh). Only a manual refresh wakes the car.
  * Fleet API has no data for a sleeping car: the stored snapshot is kept and marked asleep.
  * Without a Fleet link (Bluetooth mode) only Bluetooth is read.
  * AuthRequiredException propagates so the UI can ask for login.
@@ -40,7 +40,9 @@ class StatusRefresher(
             RefreshTrigger.TILE_VIEW ->
                 if (current != null && nowMs() - current.updatedAtMs < TILE_STALE_MS) null else viaBle(BLE_PROBE_MS)
             RefreshTrigger.CONFIRM_SCREEN -> withTimeoutOrNull(CONFIRM_BUDGET_MS) { viaBle(CONFIRM_BUDGET_MS) }
-            RefreshTrigger.APP_OPEN, RefreshTrigger.AFTER_COMMAND -> viaBle(BLE_PROBE_MS) ?: viaCloud(current)
+            RefreshTrigger.APP_OPEN ->
+                viaBle(BLE_PROBE_MS) ?: if (current != null && nowMs() - current.updatedAtMs < APP_OPEN_FRESH_MS) null else viaCloud(current)
+            RefreshTrigger.AFTER_COMMAND -> viaBle(BLE_PROBE_MS) ?: viaCloud(current)
             RefreshTrigger.MANUAL -> viaBle(MANUAL_BLE_PROBE_MS) ?: viaCloud(current, wake = true)
         }
         if (fresh == null) return current
@@ -73,6 +75,7 @@ class StatusRefresher(
 
     private companion object {
         const val TILE_STALE_MS = 5 * 60_000L
+        const val APP_OPEN_FRESH_MS = 2 * 60_000L
         const val BLE_PROBE_MS = 2_500L
         const val MANUAL_BLE_PROBE_MS = 4_000L
         const val CONFIRM_BUDGET_MS = 1_500L
