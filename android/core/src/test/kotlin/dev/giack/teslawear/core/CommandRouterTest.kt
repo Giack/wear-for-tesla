@@ -1,6 +1,7 @@
 package dev.giack.teslawear.core
 
 import dev.giack.teslawear.core.fleet.AuthRequiredException
+import dev.giack.teslawear.core.fleet.FleetRejectedException
 import dev.giack.teslawear.core.fleet.FleetResult
 import dev.giack.teslawear.protocol.CommandResult
 import dev.giack.teslawear.protocol.TransportUnavailableException
@@ -60,5 +61,16 @@ class CommandRouterTest {
     @Test fun routerReportsAuthRequired() = runTest {
         val cloud = FakeCloud().apply { api.failWith = AuthRequiredException() }
         assertEquals(RouteOutcome.AuthRequired, router(FakeBle(), cloud).execute(VehicleCommand.Lock))
+    }
+
+    @Test fun commandRejectedByFleetApiNamesTheCode() = runTest {
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("online")
+            runner.result = { throw FleetRejectedException(429) }
+        }
+        assertEquals(
+            RouteOutcome.Done(CommandResult.Failed("Fleet API 429"), Channel.CLOUD),
+            router(FakeBle(), cloud).execute(VehicleCommand.Lock),
+        )
     }
 }
