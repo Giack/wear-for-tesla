@@ -4,12 +4,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** needs-device-check
 
-- [ ] Reassembler resets after a 1 s gap between chunks (BleFraming test)
-- [ ] No `!!` on GATT state written from callbacks; fields `@Volatile`
+- [x] Reassembler resets after a 1 s gap between chunks (BleFraming test)
+- [x] No `!!` on GATT state written from callbacks; fields `@Volatile`
 - [ ] Disconnect during a reply wait fails fast (checked on the watch)
 
 ## Comments
 
 - 2026-10-24: From the final review (deferred minors on BleTransport and Reassembler).
+- 2026-10-24: Built. `Reassembler(nowMs)` resets when a chunk comes over `RX_GAP_MS` (1 s) after the previous one (tests `reassemblerDropsAPartialMessageAfterAGap`, `reassemblerKeepsAPartialMessageWithinASecond`). `BleTransport`: GATT fields `@Volatile`, `write` reads `gatt`/`txChar` once (no `!!`), a disconnect of the current GATT pushes `null` into the reply channel so `awaitReply` ends at once → `TransportTimeoutException` (unknown, as a timeout). Pending: walk away from the car mid-command on the watch and check the log shows "link lost while waiting".
