@@ -72,7 +72,9 @@ class AppGraph(private val context: Context) {
     /**
      * The car the watch drives, once its VIN is known (Bluetooth signatures include it); null before.
      * Installs provisioned by `setup.sh push-watch` are migrated to the Setup state first.
+     * Synchronized: the Tile and the app may ask at once, and two instances would open two BLE links.
      */
+    @Synchronized
     fun provisioned(): Provisioned? {
         provisioned?.let { return it }
         secretsStore.fleet()?.let { setup.adoptImportedSecrets(it.vin, hasBleKey = secretsStore.importedBleKey() != null) }
@@ -89,6 +91,7 @@ class AppGraph(private val context: Context) {
         resetProvisioning()
     }
 
+    @Synchronized
     fun resetProvisioning() { provisioned = null }
 
     /**

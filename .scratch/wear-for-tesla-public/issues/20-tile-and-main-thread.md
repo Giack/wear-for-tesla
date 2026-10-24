@@ -4,11 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** needs-device-check
 
-- [ ] Car pictures load off the main thread
+- [x] Car pictures load off the main thread
 - [ ] Tile refreshes on view, not on a timer (checked on the watch)
 
 ## Comments
 
 - 2026-10-24: From the final review (deferred minors on Tile freshness and main-thread work). Dropped from the list: the usage text in $ is correct (Tesla bills Fleet API in USD) and unreadable Bluetooth replies no longer crash the app.
+- 2026-10-24: Built the main-thread part. `HomeViewModel` loads frames on `Dispatchers.Default`. Secrets are decrypted once and cached by `AppGraph.provisioned()`, which is now `@Synchronized`: the Tile (Default dispatcher) and the app could both build a `Provisioned` on first access, i.e. two `AndroidBleLink`s with two GATT links to the car. That first decrypt still runs on the main thread (from `onResume`), once per process; moving it means making onboarding reload asynchronous, not worth it for one small AES-GCM read. Tile part not built: since Wear OS 4 tile-enter events arrive batched and late, so replacing the 15 min freshness needs an experiment on the watch (does a visible tile get re-requested with freshness 0?).
