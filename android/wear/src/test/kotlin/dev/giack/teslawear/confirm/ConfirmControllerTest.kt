@@ -93,7 +93,7 @@ class ConfirmControllerTest {
         val rec = Recorder()
         val c = controller(QuickAction.TRUNK, locked2hAgo, RouteOutcome.Done(CommandResult.Unknown, Channel.CLOUD), rec)
         c.resolve(); c.confirm()
-        assertEquals(Phase.ERROR, c.ui.value.phase)
+        assertEquals(Phase.UNCERTAIN, c.ui.value.phase)
         assertEquals(text(R.string.outcome_unknown), c.ui.value.message)
         assertTrue(rec.saved.isEmpty())
         rec.background.forEach { it() }
@@ -107,6 +107,23 @@ class ConfirmControllerTest {
         assertEquals(text(R.string.outcome_sign_in_again), messageFor(RouteOutcome.AuthRequired))
         assertEquals(text(R.string.outcome_out_of_range), messageFor(RouteOutcome.OutOfRange))
         assertEquals(text(R.string.outcome_error, "not_charging"), messageFor(RouteOutcome.Done(CommandResult.Failed("not_charging"), Channel.BLE)))
+    }
+
+    @Test fun holdAfterAnErrorSendsTheSameCommandAgain() = runTest {
+        val rec = Recorder()
+        val c = controller(QuickAction.LOCK, locked2hAgo, RouteOutcome.NoConnection, rec)
+        c.resolve(); c.confirm()
+        assertEquals(Phase.ERROR, c.ui.value.phase)
+        c.confirm()
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Unlock, VehicleCommand.Unlock), rec.sent)
+    }
+
+    // The trunk command toggles: after an unknown outcome a second hold could undo the first.
+    @Test fun holdAfterAnUnknownOutcomeSendsNothing() = runTest {
+        val rec = Recorder()
+        val c = controller(QuickAction.TRUNK, null, RouteOutcome.Done(CommandResult.Unknown, Channel.BLE), rec)
+        c.resolve(); c.confirm(); c.confirm()
+        assertEquals(1, rec.sent.size)
     }
 
     @Test fun confirmTwiceSendsOnce() = runTest {

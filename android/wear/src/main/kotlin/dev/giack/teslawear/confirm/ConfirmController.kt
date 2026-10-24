@@ -20,7 +20,8 @@ import dev.giack.teslawear.ui.text
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-enum class Phase { RESOLVING, READY, SENDING, DONE, ERROR }
+/** ERROR: the command certainly did not run, so it may be sent again. UNCERTAIN: it may have run; no retry. */
+enum class Phase { RESOLVING, READY, SENDING, DONE, ERROR, UNCERTAIN }
 
 data class ConfirmUi(val label: UiText?, val age: UiText?, val phase: Phase, val message: UiText?)
 
@@ -59,11 +60,18 @@ class ConfirmController(
 
     suspend fun confirm() {
         val cmd = command ?: return
-        if (_ui.value.phase != Phase.READY) return
+        // Every command is explicit (Lock, not "toggle lock"), but the trunk one actuates: only a command
+        // that certainly did not run is sent again.
+        if (_ui.value.phase != Phase.READY && _ui.value.phase != Phase.ERROR) return
         _ui.value = _ui.value.copy(phase = Phase.SENDING, message = text(R.string.progress_sending))
         val outcome = execute(cmd) { progress -> _ui.value = _ui.value.copy(message = progressText(progress)) }
         val failure = outcomeText(outcome)
-        _ui.value = _ui.value.copy(phase = if (failure == null) Phase.DONE else Phase.ERROR, message = failure)
+        val phase = when {
+            failure == null -> Phase.DONE
+            outcome is RouteOutcome.Done && outcome.result == CommandResult.Unknown -> Phase.UNCERTAIN
+            else -> Phase.ERROR
+        }
+        _ui.value = _ui.value.copy(phase = phase, message = failure)
         if (outcome is RouteOutcome.Done && outcome.result == CommandResult.Ok) {
             snapshot()?.let { save(it.afterCommand(cmd, nowMs(), outcome.channel)) }
         }
