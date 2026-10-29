@@ -51,7 +51,7 @@ Project layout:
 `main` is protected:
 
 - Changes reach `main` only through a pull request; direct pushes and force pushes are blocked.
-- The **Build and test** check must pass on a branch that is up to date with `main`.
+- The **Build and test** check must pass on a branch that is up to date with `main` (it is skipped, and counts as passed, when nothing under `android/` changes).
 - The maintainer (code owner) must approve. Approvals are dismissed when new commits are pushed, and every review conversation must be resolved.
 - Pull requests are **squash-merged**, so the pull request title becomes the commit subject.
 - Workflows from first-time contributors' forks run only after the maintainer approves them.
