@@ -22,6 +22,11 @@ class VehicleDataMapperTest {
         assertEquals(Channel.CLOUD, s.channel)
     }
 
+    @Test fun frunkMapsFromFt() {
+        val s = VehicleDataMapper.map(fixture("vehicle_data_open.json").replace("\"ft\":0", "\"ft\":1"), nowMs = 0)
+        assertEquals(true, s.frunkOpen)
+    }
+
     @Test fun openStatesMap() {
         val s = VehicleDataMapper.map(fixture("vehicle_data_open.json"), nowMs = 0)
         assertEquals(false, s.locked)
@@ -30,6 +35,7 @@ class VehicleDataMapperTest {
         assertEquals(true, s.charging)
         assertEquals(true, s.windowsOpen)
         assertEquals(true, s.trunkOpen)
+        assertEquals(false, s.frunkOpen)
     }
 
     @Test fun vehicleConfigBecomesTheCarProfile() {

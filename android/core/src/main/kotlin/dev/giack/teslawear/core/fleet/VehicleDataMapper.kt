@@ -36,6 +36,7 @@ object VehicleDataMapper {
             charging = charge?.string("charging_state")?.let { it == "Charging" },
             windowsOpen = if (windows.isEmpty()) null else windows.any { it != 0 },
             trunkOpen = vehicle?.int("rt")?.let { it != 0 },
+            frunkOpen = vehicle?.int("ft")?.let { it != 0 },
             // vehicle_data only answers while the car is awake.
             asleep = false,
             updatedAtMs = nowMs,

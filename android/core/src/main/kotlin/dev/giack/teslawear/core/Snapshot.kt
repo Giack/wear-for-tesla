@@ -17,6 +17,7 @@ data class Snapshot(
     val charging: Boolean? = null,
     val windowsOpen: Boolean? = null,
     val trunkOpen: Boolean? = null,
+    val frunkOpen: Boolean? = null,
     /** The car was asleep at the last check: the other fields date from before it fell asleep. */
     val asleep: Boolean? = null,
     val updatedAtMs: Long,
@@ -38,6 +39,7 @@ data class Snapshot(
         charging = newer.charging ?: charging,
         windowsOpen = newer.windowsOpen ?: windowsOpen,
         trunkOpen = newer.trunkOpen ?: trunkOpen,
+        frunkOpen = newer.frunkOpen ?: frunkOpen,
         asleep = newer.asleep ?: asleep,
         updatedAtMs = newer.updatedAtMs,
         checkedAtMs = newer.checkedAtMs ?: checkedAtMs,
@@ -61,6 +63,7 @@ fun Snapshot.afterCommand(cmd: VehicleCommand, nowMs: Long, channel: Channel): S
         VehicleCommand.CloseWindows -> copy(windowsOpen = false)
         VehicleCommand.OpenTrunk -> copy(trunkOpen = true)
         VehicleCommand.CloseTrunk -> copy(trunkOpen = false)
+        VehicleCommand.OpenFrunk -> copy(frunkOpen = true)
         is VehicleCommand.SetTemp -> copy(setTempC = cmd.celsius)
         else -> return this
     }

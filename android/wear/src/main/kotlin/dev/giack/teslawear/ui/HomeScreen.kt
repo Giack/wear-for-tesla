@@ -187,6 +187,7 @@ private fun activeFor(a: QuickAction, s: dev.giack.teslawear.core.Snapshot?): Bo
     QuickAction.CLIMATE -> s?.climateOn == true
     QuickAction.CHARGE_PORT -> s?.chargePortOpen == true
     QuickAction.TRUNK -> s?.trunkOpen == true
+    QuickAction.FRUNK -> s?.frunkOpen == true
     QuickAction.WINDOWS -> s?.windowsOpen == true
     else -> false
 }
