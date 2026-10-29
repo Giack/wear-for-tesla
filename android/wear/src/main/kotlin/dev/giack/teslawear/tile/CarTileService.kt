@@ -1,6 +1,7 @@
 package dev.giack.teslawear.tile
 
 import android.content.Context
+import android.os.PowerManager
 import androidx.concurrent.futures.SuspendToFutureAdapter
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.TimelineBuilders
@@ -17,7 +18,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-/** Quick-command Tile: renders the stored snapshot, then refreshes over BLE (free) in the background. */
+/** Quick-command Tile: renders the stored snapshot; when viewed with the screen on, refreshes over BLE (free). */
 class CarTileService : TileService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -27,6 +28,8 @@ class CarTileService : TileService() {
             val snapshot = graph.snapshots.load()
             val model = buildTileModel(snapshot, System.currentTimeMillis(), graph.meter.level(), graph.setup.state.profile?.model)
             scope.launch {
+                // Screen off: Android returns nothing to a scan, so the radio time would be wasted.
+                if (getSystemService(PowerManager::class.java)?.isInteractive != true) return@launch
                 val before = graph.snapshots.load()
                 val after = runCatching { graph.provisioned()?.refresher?.refresh(RefreshTrigger.TILE_VIEW) }.getOrNull()
                 if (after != null && after != before) requestRefresh(applicationContext)
@@ -78,7 +81,9 @@ class CarTileService : TileService() {
 
     companion object {
         private const val RESOURCES_VERSION = "1"
-        private const val FRESHNESS_MS = 15 * 60_000L
+        // No periodic requests: it scanned every 15 min day and night, mostly with the screen off.
+        // The app and the background check push new state through requestRefresh.
+        private const val FRESHNESS_MS = 0L
 
         fun requestRefresh(context: Context) = getUpdater(context).requestUpdate(CarTileService::class.java)
     }

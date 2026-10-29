@@ -18,7 +18,8 @@ enum class RefreshTrigger {
 }
 
 /**
- * Refresh policy: Tile and confirm screen only read over BLE (free); app open and post-command
+ * Refresh policy: Tile and confirm screen only read over BLE (free; the Tile and the background check
+ * connect to the known car without scanning); app open and post-command
  * may read over Fleet API unless the monthly budget is exhausted (app open only when the state is not fresh). Only a manual refresh wakes the car.
  * Fleet API has no data for a sleeping car: the stored snapshot is kept and marked asleep.
  * Without a Fleet link (Bluetooth mode) only Bluetooth is read.
@@ -39,8 +40,9 @@ class StatusRefresher(
     suspend fun refresh(trigger: RefreshTrigger): Snapshot? {
         val current = store.load()
         val fresh: Snapshot? = when (trigger) {
+            // The Tile is a service: Android rejects its scans (location is foreground-only), so it connects directly.
             RefreshTrigger.TILE_VIEW ->
-                if (current != null && nowMs() - current.updatedAtMs < TILE_STALE_MS) null else viaBle(BLE_PROBE_MS)
+                if (current != null && nowMs() - current.updatedAtMs < TILE_STALE_MS) null else knownCarViaBle()
             RefreshTrigger.CONFIRM_SCREEN -> withTimeoutOrNull(CONFIRM_BUDGET_MS) { viaBle(CONFIRM_BUDGET_MS) }
             RefreshTrigger.APP_OPEN ->
                 viaBle(BLE_PROBE_MS) ?: if (current != null && nowMs() - current.lastCheckMs < APP_OPEN_FRESH_MS) null else viaCloud(current)
