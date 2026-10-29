@@ -161,4 +161,50 @@ class StatusRefresherTest {
 
         assertEquals(listOf("region not found", "Fleet API 403: forbidden"), errors.map { it.message })
     }
+
+    // Background: no scan (Android blocks it there), a direct connection to the car seen before.
+    @Test fun backgroundReadsTheKnownCarOverBluetoothWithoutScanning() = runTest {
+        val ble = FakeBle(known = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val cloud = FakeCloud()
+        val result = refresher(ble, cloud, MemorySnapshots(snap(locked = false, updatedAtMs = 1))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(true, result!!.locked)
+        assertEquals(0, ble.probes)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundReadsTheCloudOnceWhenTheCarIsNotNear() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        val result = refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(80, result!!.batteryPct)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundNeverWakesASleepingCar() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val cloud = FakeCloud()
+        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(true, result!!.asleep)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
+    // The app was opened (or the car checked) a few minutes ago: the background run adds nothing.
+    @Test fun backgroundSkipsTheCloudWhenRecentlyChecked() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = now - 10 * 60_000))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundSkipsTheCloudWhenTheBudgetIsExhausted() = runTest {
+        val exhausted = UsageMeter(MemoryUsageStore(UsageCounts("2026-10", 0, 0, 500)), nowMs = { now })
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(updatedAtMs = 1)), exhausted).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundInBluetoothModeOnlyTriesBluetooth() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val result = StatusRefresher(FakeBle(), null, meter, store, nowMs = { now }).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1), result)
+    }
 }

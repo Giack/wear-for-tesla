@@ -28,6 +28,10 @@ Tap **Settings → API budget** to cycle through $2, $5, $10, $20 and $50 a mont
 - Bluetooth keeps working as usual, for state and commands.
 - Commands you confirm still go through the Fleet API when the car is out of Bluetooth range.
 
+## Background check
+
+While the app is closed it checks the car twice an hour, so the watch face, Tile and app show a recent state. Each check first tries a direct Bluetooth connection to your car (free; it works once the watch has seen the car nearby). If the car is not near, in Fleet mode it makes **one** state read, skipped if the app already checked in the last 25 minutes or the budget is used up. The check never wakes the car: a sleeping car answers "asleep" and stays asleep, and reading twice an hour is rare enough to let it fall asleep. That is at most about 1,440 reads a month, roughly **$3**. Android may run the check less often when the watch battery is low or the watch is idle. Each run is written to **Settings → Bluetooth log** ("Background: …").
+
 ## Keeping usage low
 
-The app already avoids the expensive parts: it never polls the Fleet API in the background, the Tile and confirmation screen read only over Bluetooth, opening the app reads over the cloud only when the state on screen is more than two minutes old, and it wakes the car only for a command you confirmed. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.
+The app already avoids the expensive parts: the Tile and confirmation screen read only over Bluetooth, opening the app reads over the cloud only when the state on screen is more than two minutes old, and it wakes the car only for a command you confirmed. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.

@@ -54,7 +54,7 @@ class BleScanner(private val context: Context, private val budget: ScanBudget = 
             Diag.w("BLE scan not started: permissions=$perms bluetooth=$btOn")
             return null to ScanReport(perms, btOn, locationOn, 0, emptySet(), false)
         }
-        val wait = budget.delayBefore(timeoutMs) ?: run {
+        val wait = budget.reserve(timeoutMs) ?: run {
             Diag.w("BLE scan skipped: Android allows 5 scans per 30 s")
             return null to ScanReport(perms, btOn, locationOn, 0, emptySet(), false)
         }
@@ -78,7 +78,6 @@ class BleScanner(private val context: Context, private val budget: ScanBudget = 
                 match.completeExceptionally(IllegalStateException("scan failed $errorCode"))
             }
         }
-        budget.started()
         scanner.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), callback)
         // Only a scan failure becomes "not found": cancellation must keep propagating.
         val device = try {

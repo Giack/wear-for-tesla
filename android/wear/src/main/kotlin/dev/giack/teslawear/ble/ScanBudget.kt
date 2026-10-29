@@ -12,21 +12,19 @@ class ScanBudget(
     private val starts = ArrayDeque<Long>()
 
     /**
-     * How long to wait before a scan of [timeoutMs] may start, or null when the wait would leave
-     * less than [MIN_SCAN_MS] of scanning.
+     * Books a scan of [timeoutMs]: returns how long to wait before starting it, or null (nothing booked)
+     * when the wait would leave less than [MIN_SCAN_MS] of scanning. Checking and booking are one step,
+     * so callers asking at the same moment cannot overbook.
      */
     @Synchronized
-    fun delayBefore(timeoutMs: Long): Long? {
+    fun reserve(timeoutMs: Long): Long? {
         val now = nowMs()
         while (starts.isNotEmpty() && now - starts.first() >= windowMs) starts.removeFirst()
-        if (starts.size < maxStarts) return 0
-        val wait = starts.first() + windowMs - now
-        return wait.takeIf { timeoutMs - it >= MIN_SCAN_MS }
-    }
-
-    @Synchronized
-    fun started() {
-        starts.addLast(nowMs())
+        val wait = if (starts.size < maxStarts) 0 else starts.first() + windowMs - now
+        if (timeoutMs - wait < MIN_SCAN_MS) return null
+        if (starts.size >= maxStarts) starts.removeFirst()
+        starts.addLast(now + wait)
+        return wait
     }
 
     companion object {

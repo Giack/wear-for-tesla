@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.wear.protolayout)
     implementation(libs.concurrent.futures.ktx)
     implementation(libs.wear.complications.data.source)
+    implementation(libs.work.runtime)
     testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.coroutines.test)

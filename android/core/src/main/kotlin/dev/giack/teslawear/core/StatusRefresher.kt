@@ -13,6 +13,8 @@ enum class RefreshTrigger {
     APP_OPEN, AFTER_COMMAND, TILE_VIEW, CONFIRM_SCREEN,
     /** The user asked for fresh data: the only refresh that may wake the car. */
     MANUAL,
+    /** Periodic check while the app is closed: Bluetooth to the known car, else one Fleet read, never a wake. */
+    BACKGROUND,
 }
 
 /**
@@ -44,6 +46,8 @@ class StatusRefresher(
                 viaBle(BLE_PROBE_MS) ?: if (current != null && nowMs() - current.lastCheckMs < APP_OPEN_FRESH_MS) null else viaCloud(current)
             RefreshTrigger.AFTER_COMMAND -> viaBle(BLE_PROBE_MS) ?: viaCloud(current)
             RefreshTrigger.MANUAL -> viaBle(MANUAL_BLE_PROBE_MS) ?: viaCloud(current, wake = true)
+            RefreshTrigger.BACKGROUND -> knownCarViaBle()
+                ?: if (current != null && nowMs() - current.lastCheckMs < BACKGROUND_FRESH_MS) null else viaCloud(current)
         }
         if (fresh == null) return current
         val merged = current?.mergedWith(fresh) ?: fresh
@@ -53,6 +57,12 @@ class StatusRefresher(
 
     private suspend fun viaBle(probeMs: Long): Snapshot? = try {
         if (ble.isReachable(probeMs)) ble.readStatus() else null
+    } catch (_: TransportUnavailableException) {
+        null
+    }
+
+    private suspend fun knownCarViaBle(): Snapshot? = try {
+        ble.readKnownCarStatus()
     } catch (_: TransportUnavailableException) {
         null
     }
@@ -76,6 +86,7 @@ class StatusRefresher(
     private companion object {
         const val TILE_STALE_MS = 5 * 60_000L
         const val APP_OPEN_FRESH_MS = 2 * 60_000L
+        const val BACKGROUND_FRESH_MS = 25 * 60_000L
         const val BLE_PROBE_MS = 2_500L
         const val MANUAL_BLE_PROBE_MS = 4_000L
         const val CONFIRM_BUDGET_MS = 1_500L

@@ -13,3 +13,4 @@
 
 - 2026-10-24: From the final review (deferred minor "repeated startScan may hit Android 5-scans/30 s throttle").
 - 2026-10-24: Built. `ScanBudget` (one shared instance for the app) counts scan starts in a 30 s window; `BleScanner` waits for the next free slot when at least 1 s of scanning is left, otherwise reports not seen with "BLE scan skipped" in the log. Tests `ScanBudgetTest` (4).
+- 2026-10-29: Bug found on the watch: 10 scans in 15 s during a launch burst, the later ones seeing 0 devices (Android throttling). Check (`delayBefore`) and record (`started`) were separate calls, so callers asking together all passed. Replaced by one atomic `reserve(timeoutMs)` that books the slot (test `simultaneousRequestsCannotOverbook`, `aReservedWaitCountsAsAStart`). Verified on the watch: bursts now make at most 5 real scans per 30 s, all with devices seen, the rest logged as skipped.

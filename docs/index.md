@@ -40,7 +40,7 @@ Wear for Tesla is a free, open-source Wear OS app that shows your Tesla's state 
 
 ## Safety
 
-Every command, from the app or the Tile, needs **hold to confirm**, and the confirmation shows the exact action and how old the known state is. The app never wakes the car just to read its state: in Fleet mode it wakes the car only to run a command you confirmed.
+Every command, from the app or the Tile, needs **hold to confirm**, and the confirmation shows the exact action and how old the known state is. The app never wakes the car just to read its state: in Fleet mode it wakes the car only to run a command you confirmed. While the app is closed it checks the car twice an hour, over Bluetooth when near and otherwise with one Fleet API read that leaves a sleeping car asleep ([details](budget.md#background-check)).
 
 ## Getting started
 

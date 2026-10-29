@@ -2,6 +2,7 @@ package dev.giack.teslawear
 
 import android.app.Application
 import android.content.Context
+import dev.giack.teslawear.background.BackgroundRefreshWorker
 import dev.giack.teslawear.ble.AndroidBleLink
 import dev.giack.teslawear.core.BleLink
 import dev.giack.teslawear.core.CloudLink
@@ -44,6 +45,7 @@ class TeslaApp : Application() {
         graph.surfaceUpdaters += { ctx -> CarTileService.requestRefresh(ctx) }
         graph.surfaceUpdaters += { ctx -> ComplicationUpdates.requestAll(ctx) }
         graph.onSnapshotSaved = { graph.notifySurfaces() }
+        BackgroundRefreshWorker.schedule(this)
     }
 }
 
@@ -105,6 +107,7 @@ class AppGraph(private val context: Context) {
         KeystoreEcdhKey.delete()
         listOf("ble", "ble_keystore", "cloud").forEach { PrefsSessionCache(context, it).clear() }
         PrefsVehicleKeyPins(context).clear()
+        AndroidBleLink.forgetKnownCar(context)
         snapshots.clear()
         setup.removeCar()
         resetProvisioning()
