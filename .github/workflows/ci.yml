@@ -25,7 +25,7 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
       - run: ./gradlew test :wear:lintPublicRelease :wear:assemblePublicRelease
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wear-public-apk
           path: android/wear/build/outputs/apk/public/release/*.apk
