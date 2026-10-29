@@ -25,6 +25,10 @@ cd android
 
 The site is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) from `docs/`: `pip install -r requirements-site.txt && mkdocs serve`. Design notes and decision records are in `design/`.
 
+## Contributing
+
+Pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md) first. Changes reach `main` only through reviewed pull requests. Report security problems privately ([SECURITY.md](SECURITY.md)).
+
 ## Privacy and licence
 
 Nothing is sent to the project: see [PRIVACY.md](PRIVACY.md). Licensed under the [Apache License 2.0](LICENSE).

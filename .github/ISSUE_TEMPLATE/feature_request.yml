@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest something the app should do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: moment
+    attributes:
+      label: When would you use it?
+      description: Describe the moment you missed this, at the car or away from it.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like the watch to do?
+    validations:
+      required: true
