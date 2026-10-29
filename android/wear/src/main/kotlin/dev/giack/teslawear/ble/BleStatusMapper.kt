@@ -24,6 +24,7 @@ object BleStatusMapper {
                 else -> null
             },
             trunkOpen = if (status.hasClosureStatuses()) open(closures.rearTrunk) else null,
+            frunkOpen = if (status.hasClosureStatuses()) open(closures.frontTrunk) else null,
             chargePortOpen = if (status.hasClosureStatuses()) open(closures.chargePort) else null,
             asleep = isAsleep(status),
             updatedAtMs = nowMs,
@@ -57,6 +58,7 @@ object BleStatusMapper {
             charging = if (charge.hasChargingState()) charge.chargingState.hasCharging() else null,
             windowsOpen = if (windows.isEmpty()) null else windows.any { it },
             trunkOpen = if (closures.hasDoorOpenTrunkRear()) closures.doorOpenTrunkRear else null,
+            frunkOpen = if (closures.hasDoorOpenTrunkFront()) closures.doorOpenTrunkFront else null,
             updatedAtMs = nowMs,
             channel = Channel.BLE,
         )

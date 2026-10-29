@@ -53,7 +53,7 @@ fun buildTileModel(snapshot: Snapshot?, nowMs: Long, meterLevel: BudgetLevel, mo
                 s?.locked == true,
             ),
             TileButton(QuickAction.CLIMATE, actionName(QuickAction.CLIMATE), s?.climateOn == true),
-            TileButton(QuickAction.FRUNK, actionName(QuickAction.FRUNK), false),
+            TileButton(QuickAction.FRUNK, actionName(QuickAction.FRUNK), s?.frunkOpen == true),
             TileButton(QuickAction.CHARGE_PORT, R.string.tile_port, s?.chargePortOpen == true),
         ),
     )

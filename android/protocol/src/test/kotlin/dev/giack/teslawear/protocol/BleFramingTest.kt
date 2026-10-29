@@ -29,6 +29,24 @@ class BleFramingTest {
         assertEquals("0203", r.push(BleFraming.frame(unhex("0203")))!!.hex())
     }
 
+    // As Tesla's Go connector: a chunk arriving over 1 s after the previous one starts a new message.
+    @Test fun reassemblerDropsAPartialMessageAfterAGap() {
+        var now = 0L
+        val r = BleFraming.Reassembler(nowMs = { now })
+        assertNull(r.push(BleFraming.frame(ByteArray(30)).copyOf(10)))
+        now += 1_001
+        assertEquals("0203", r.push(BleFraming.frame(unhex("0203")))!!.hex())
+    }
+
+    @Test fun reassemblerKeepsAPartialMessageWithinASecond() {
+        var now = 0L
+        val r = BleFraming.Reassembler(nowMs = { now })
+        val chunks = BleFraming.chunks(BleFraming.frame(unhex("aabbcc")), 3)
+        assertNull(r.push(chunks[0]))
+        now += 1_000
+        assertEquals("aabbcc", r.push(chunks[1])!!.hex())
+    }
+
     @Test fun rejectsOversizeLength() {
         assertFailsWith<IllegalStateException> { BleFraming.Reassembler().push(unhex("0401")) }
     }

@@ -9,6 +9,7 @@ import dev.giack.teslawear.core.usage.UsageMeter
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class StatusRefresherTest {
     private val now = 1_792_238_400_000L
@@ -33,9 +34,18 @@ class StatusRefresherTest {
         assertEquals(0, ble.probes)
     }
 
+    // The Tile runs as a service: Android rejects its scans (location is foreground-only), seen on the watch.
+    @Test fun tileRefreshNeverScans() = runTest {
+        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val stored = snap(locked = false, updatedAtMs = now - 10 * 60_000)
+        val result = refresher(ble, FakeCloud(), MemorySnapshots(stored)).refresh(RefreshTrigger.TILE_VIEW)
+        assertEquals(0, ble.probes)
+        assertEquals(stored, result)
+    }
+
     @Test fun tileRefreshMergesBleStatus() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, locked = false, updatedAtMs = now - 10 * 60_000))
-        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val ble = FakeBle(known = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
         val result = refresher(ble, FakeCloud(), store).refresh(RefreshTrigger.TILE_VIEW)!!
         assertEquals(true, result.locked)
         assertEquals(50, result.batteryPct)
@@ -49,12 +59,45 @@ class StatusRefresherTest {
         assertEquals(80, result!!.batteryPct)
     }
 
+    // The app comes to the foreground often: a state read a minute ago is not worth a billed call.
+    @Test fun appOpenSkipsCloudWhenTheStateIsFresh() = runTest {
+        val stored = snap(batteryPct = 50, updatedAtMs = now - 60_000)
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        val result = refresher(FakeBle(), cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(stored, result)
+    }
+
+    @Test fun appOpenStillTriesBluetoothWhenTheStateIsFresh() = runTest {
+        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val result = refresher(ble, FakeCloud(), MemorySnapshots(snap(locked = false, updatedAtMs = now - 60_000)))
+            .refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(true, result!!.locked)
+    }
+
+    @Test fun afterCommandReadsCloudEvenWhenTheStateIsFresh() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = now - 60_000))).refresh(RefreshTrigger.AFTER_COMMAND)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
+    // An asleep answer keeps the old data date, so the check time is what makes the state fresh.
+    @Test fun appOpenDoesNotAskAgainRightAfterFindingTheCarAsleep() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val cloud = FakeCloud()
+        val r = refresher(FakeBle(), cloud, store)
+        r.refresh(RefreshTrigger.APP_OPEN)
+        r.refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(1, store.snapshot!!.updatedAtMs)
+    }
+
     @Test fun appOpenKeepsSnapshotWhenAsleep() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
         val cloud = FakeCloud()
         val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.APP_OPEN)
         // Fleet API has no data for a sleeping car: the stored data stays, with its age, marked asleep.
-        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result)
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true, checkedAtMs = now), result)
         assertEquals(result, store.snapshot)
         assertEquals(0, cloud.api.wakes)
     }
@@ -72,8 +115,10 @@ class StatusRefresherTest {
     @Test fun manualRefreshGivesUpWhenTheCarDoesNotWake() = runTest {
         val cloud = FakeCloud().apply { api.states += FleetResult.Ok("asleep") }
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
-        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.MANUAL)
-        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result)
+        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.MANUAL)!!
+        // Checked when the wake attempt gave up, after the waiting.
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1).copy(asleep = true), result.copy(checkedAtMs = null))
+        assertTrue(result.checkedAtMs!! > now)
         assertEquals(1, cloud.api.dataCalls)
     }
 
@@ -124,5 +169,51 @@ class StatusRefresherTest {
         refresherWith(FakeCloud().apply { api.data = FleetResult.Error(403, "forbidden") }).refresh(RefreshTrigger.APP_OPEN)
 
         assertEquals(listOf("region not found", "Fleet API 403: forbidden"), errors.map { it.message })
+    }
+
+    // Background: no scan (Android blocks it there), a direct connection to the car seen before.
+    @Test fun backgroundReadsTheKnownCarOverBluetoothWithoutScanning() = runTest {
+        val ble = FakeBle(known = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val cloud = FakeCloud()
+        val result = refresher(ble, cloud, MemorySnapshots(snap(locked = false, updatedAtMs = 1))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(true, result!!.locked)
+        assertEquals(0, ble.probes)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundReadsTheCloudOnceWhenTheCarIsNotNear() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        val result = refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(80, result!!.batteryPct)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundNeverWakesASleepingCar() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val cloud = FakeCloud()
+        val result = refresher(FakeBle(), cloud, store).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(true, result!!.asleep)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(1, cloud.api.dataCalls)
+    }
+
+    // The app was opened (or the car checked) a few minutes ago: the background run adds nothing.
+    @Test fun backgroundSkipsTheCloudWhenRecentlyChecked() = runTest {
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(batteryPct = 50, updatedAtMs = now - 10 * 60_000))).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundSkipsTheCloudWhenTheBudgetIsExhausted() = runTest {
+        val exhausted = UsageMeter(MemoryUsageStore(UsageCounts("2026-10", 0, 0, 500)), nowMs = { now })
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(snap(updatedAtMs = 1)), exhausted).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(0, cloud.api.dataCalls)
+    }
+
+    @Test fun backgroundInBluetoothModeOnlyTriesBluetooth() = runTest {
+        val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
+        val result = StatusRefresher(FakeBle(), null, meter, store, nowMs = { now }).refresh(RefreshTrigger.BACKGROUND)
+        assertEquals(snap(batteryPct = 50, updatedAtMs = 1), result)
     }
 }

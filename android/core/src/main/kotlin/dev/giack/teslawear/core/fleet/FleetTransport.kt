@@ -10,6 +10,9 @@ import java.io.InterruptedIOException
 
 class VehicleAsleepException : Exception("vehicle asleep")
 
+/** Tesla refused the request itself (HTTP 4xx): it never reached the car. */
+class FleetRejectedException(val code: Int) : Exception("Fleet API $code")
+
 /** Sends signed commands through Fleet API `signed_command` (HMAC-authenticated, as Fleet API requires). */
 class FleetTransport(private val client: FleetApiClient, private val vin: String) : Transport {
     override val authMethod = AuthMethod.HMAC
@@ -25,7 +28,10 @@ class FleetTransport(private val client: FleetApiClient, private val vin: String
         return when (result) {
             is FleetResult.Ok -> RoutableMessage.parseFrom(result.value)
             FleetResult.Asleep -> throw VehicleAsleepException()
-            is FleetResult.Error -> throw TransportUnavailableException("Fleet API ${result.code}: ${result.message}")
+            // A 5xx may follow Tesla forwarding the command, so the car may have executed it.
+            is FleetResult.Error ->
+                if (result.code >= 500) throw TransportTimeoutException("Fleet API ${result.code}: ${result.message}")
+                else throw FleetRejectedException(result.code)
         }
     }
 }

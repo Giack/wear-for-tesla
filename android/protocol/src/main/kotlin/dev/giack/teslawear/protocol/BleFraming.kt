@@ -9,6 +9,7 @@ object BleFraming {
     const val TO_VEHICLE_UUID = "00000212-b2d1-43f0-9b88-960cebf8b91e"
     const val FROM_VEHICLE_UUID = "00000213-b2d1-43f0-9b88-960cebf8b91e"
     const val MAX_MESSAGE = 1024
+    const val RX_GAP_MS = 1_000L
 
     /** "S" + hex(SHA1(VIN)[:8]) + "C". */
     fun vehicleLocalName(vin: String): String =
@@ -22,11 +23,16 @@ object BleFraming {
     fun chunks(framed: ByteArray, blockLen: Int): List<ByteArray> =
         (framed.indices step blockLen).map { framed.copyOfRange(it, minOf(it + blockLen, framed.size)) }
 
-    class Reassembler(private val maxLen: Int = MAX_MESSAGE) {
+    /** Joins notifications into messages; a gap over [RX_GAP_MS] drops a partial one (as Tesla's Go connector). */
+    class Reassembler(private val maxLen: Int = MAX_MESSAGE, private val nowMs: () -> Long = System::currentTimeMillis) {
         private val buffer = ByteArrayOutputStream()
+        private var lastChunkMs = 0L
 
         /** Feeds one notification; returns a complete message once all of it has arrived. */
         fun push(chunk: ByteArray): ByteArray? {
+            val now = nowMs()
+            if (now - lastChunkMs > RX_GAP_MS) buffer.reset()
+            lastChunkMs = now
             buffer.write(chunk)
             val bytes = buffer.toByteArray()
             if (bytes.size < 2) return null

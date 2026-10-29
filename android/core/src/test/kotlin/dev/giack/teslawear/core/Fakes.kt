@@ -11,12 +11,13 @@ class FakeRunner(var result: () -> CommandResult = { CommandResult.Ok }) : Comma
     override suspend fun execute(cmd: VehicleCommand): CommandResult { executed += cmd; return result() }
 }
 
-class FakeBle(var reachable: Boolean = false, var status: Snapshot? = null) : BleLink {
+class FakeBle(var reachable: Boolean = false, var status: Snapshot? = null, var known: Snapshot? = null) : BleLink {
     val runner = FakeRunner()
     var probes = 0
     override suspend fun isReachable(timeoutMs: Long): Boolean { probes++; return reachable }
     override val commands: CommandRunner get() = runner
     override suspend fun readStatus(): Snapshot? = status
+    override suspend fun readKnownCarStatus(): Snapshot? = known
 }
 
 class FakeApi : VehicleApi {

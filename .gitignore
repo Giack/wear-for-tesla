@@ -3,7 +3,8 @@
 *.pem
 *.key
 local.properties
-secrets/
+# no trailing slash: also matches a symlink to the secrets folder
+secrets
 .gradle/
 build/
 .idea/

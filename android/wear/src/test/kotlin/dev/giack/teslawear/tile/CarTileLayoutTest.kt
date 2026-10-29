@@ -15,7 +15,7 @@ import org.junit.Test
 class CarTileLayoutTest {
     @Test fun tileModelForLockedCar() {
         val s = Snapshot(batteryPct = 78, rangeKm = 312, insideTempC = 19.4f, locked = true, climateOn = false,
-            chargePortOpen = true, updatedAtMs = 0, channel = Channel.BLE)
+            chargePortOpen = true, frunkOpen = true, updatedAtMs = 0, channel = Channel.BLE)
         val m = buildTileModel(s, nowMs = 60_000, meterLevel = BudgetLevel.OK)
         assertEquals(R.string.model_y, m.title)
         assertEquals(R.string.channel_ble, m.chip)
@@ -24,7 +24,7 @@ class CarTileLayoutTest {
             listOf(
                 TileButton(QuickAction.LOCK, R.string.tile_locked, active = true),
                 TileButton(QuickAction.CLIMATE, R.string.action_climate, active = false),
-                TileButton(QuickAction.FRUNK, R.string.action_frunk, active = false),
+                TileButton(QuickAction.FRUNK, R.string.action_frunk, active = true),
                 TileButton(QuickAction.CHARGE_PORT, R.string.tile_port, active = true),
             ),
             m.buttons,

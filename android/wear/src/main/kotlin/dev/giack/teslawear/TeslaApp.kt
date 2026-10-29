@@ -2,6 +2,7 @@ package dev.giack.teslawear
 
 import android.app.Application
 import android.content.Context
+import dev.giack.teslawear.background.BackgroundRefreshWorker
 import dev.giack.teslawear.ble.AndroidBleLink
 import dev.giack.teslawear.core.BleLink
 import dev.giack.teslawear.core.CloudLink
@@ -44,6 +45,7 @@ class TeslaApp : Application() {
         graph.surfaceUpdaters += { ctx -> CarTileService.requestRefresh(ctx) }
         graph.surfaceUpdaters += { ctx -> ComplicationUpdates.requestAll(ctx) }
         graph.onSnapshotSaved = { graph.notifySurfaces() }
+        BackgroundRefreshWorker.schedule(this)
     }
 }
 
@@ -72,7 +74,9 @@ class AppGraph(private val context: Context) {
     /**
      * The car the watch drives, once its VIN is known (Bluetooth signatures include it); null before.
      * Installs provisioned by `setup.sh push-watch` are migrated to the Setup state first.
+     * Synchronized: the Tile and the app may ask at once, and two instances would open two BLE links.
      */
+    @Synchronized
     fun provisioned(): Provisioned? {
         provisioned?.let { return it }
         secretsStore.fleet()?.let { setup.adoptImportedSecrets(it.vin, hasBleKey = secretsStore.importedBleKey() != null) }
@@ -89,6 +93,7 @@ class AppGraph(private val context: Context) {
         resetProvisioning()
     }
 
+    @Synchronized
     fun resetProvisioning() { provisioned = null }
 
     /**
@@ -102,6 +107,7 @@ class AppGraph(private val context: Context) {
         KeystoreEcdhKey.delete()
         listOf("ble", "ble_keystore", "cloud").forEach { PrefsSessionCache(context, it).clear() }
         PrefsVehicleKeyPins(context).clear()
+        AndroidBleLink.forgetKnownCar(context)
         snapshots.clear()
         setup.removeCar()
         resetProvisioning()

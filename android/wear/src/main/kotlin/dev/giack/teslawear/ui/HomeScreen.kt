@@ -42,9 +42,11 @@ import dev.giack.teslawear.core.usage.BudgetLevel
 import dev.giack.teslawear.diag.Diag
 import dev.giack.teslawear.graph
 import dev.giack.teslawear.ui.theme.TeslaColors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val graph = app.graph
@@ -64,13 +66,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     val model get() = graph.setup.state.profile?.model
 
     fun open() = viewModelScope.launch {
-        _frames.value = graph.carImages.frames()
+        _frames.value = loadFrames()
         controller.open()
         if (_frames.value == null && graph.carImages.prepare(graph.secretsStore.renderOptions())) {
-            _frames.value = graph.carImages.frames()
+            _frames.value = loadFrames()
             graph.notifySurfaces()
         }
     }
+    // Decoding renders or drawing the illustration takes too long for the main thread.
+    private suspend fun loadFrames() = withContext(Dispatchers.Default) { graph.carImages.frames() }
     fun send(action: QuickAction) = viewModelScope.launch { controller.send(action); graph.notifySurfaces() }
     fun adjustTemp(delta: Float) = controller.adjustTemp(delta)
     fun refreshNow() = viewModelScope.launch { controller.refreshNow(); graph.notifySurfaces() }
@@ -183,6 +187,7 @@ private fun activeFor(a: QuickAction, s: dev.giack.teslawear.core.Snapshot?): Bo
     QuickAction.CLIMATE -> s?.climateOn == true
     QuickAction.CHARGE_PORT -> s?.chargePortOpen == true
     QuickAction.TRUNK -> s?.trunkOpen == true
+    QuickAction.FRUNK -> s?.frunkOpen == true
     QuickAction.WINDOWS -> s?.windowsOpen == true
     else -> false
 }

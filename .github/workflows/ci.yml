@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   build:
+    # Required status check for main (repository ruleset): keep the name in sync.
+    name: Build and test
     runs-on: ubuntu-latest
     defaults:
       run:

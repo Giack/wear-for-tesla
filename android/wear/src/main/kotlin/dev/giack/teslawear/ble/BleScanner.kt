@@ -28,7 +28,7 @@ data class ScanReport(
  * Finds the car by its advertised local name ("S" + SHA1(VIN)[:8] + "C"). Scans without a system
  * filter and matches the name itself, so a name carried only in the scan response still matches.
  */
-class BleScanner(private val context: Context) {
+class BleScanner(private val context: Context, private val budget: ScanBudget = ScanBudget.shared) {
     val requiredPermissions = arrayOf(
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT,
@@ -54,6 +54,15 @@ class BleScanner(private val context: Context) {
             Diag.w("BLE scan not started: permissions=$perms bluetooth=$btOn")
             return null to ScanReport(perms, btOn, locationOn, 0, emptySet(), false)
         }
+        val wait = budget.reserve(timeoutMs) ?: run {
+            Diag.w("BLE scan skipped: Android allows 5 scans per 30 s")
+            return null to ScanReport(perms, btOn, locationOn, 0, emptySet(), false)
+        }
+        if (wait > 0) {
+            Diag.i("BLE scan waits $wait ms for Android's scan limit")
+            kotlinx.coroutines.delay(wait)
+        }
+        val scanMs = timeoutMs - wait
         val seen = mutableSetOf<String>()
         val teslaNames = mutableSetOf<String>()
         val match = CompletableDeferred<BluetoothDevice>()
@@ -72,12 +81,12 @@ class BleScanner(private val context: Context) {
         scanner.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), callback)
         // Only a scan failure becomes "not found": cancellation must keep propagating.
         val device = try {
-            if (stopOnMatch) withTimeoutOrNull(timeoutMs) { try { match.await() } catch (_: IllegalStateException) { null } }
-            else { kotlinx.coroutines.delay(timeoutMs); if (match.isCompleted) runCatching { match.getCompleted() }.getOrNull() else null }
+            if (stopOnMatch) withTimeoutOrNull(scanMs) { try { match.await() } catch (_: IllegalStateException) { null } }
+            else { kotlinx.coroutines.delay(scanMs); if (match.isCompleted) runCatching { match.getCompleted() }.getOrNull() else null }
         } finally {
             runCatching { scanner.stopScan(callback) }
         }
-        Diag.i("BLE scan ${timeoutMs / 1000.0} s for $localName: ${seen.size} devices, tesla=$teslaNames, found=${device != null}")
+        Diag.i("BLE scan ${scanMs / 1000.0} s for $localName: ${seen.size} devices, tesla=$teslaNames, found=${device != null}")
         return device to ScanReport(perms, btOn, locationOn, seen.size, teslaNames, device != null)
     }
 }
