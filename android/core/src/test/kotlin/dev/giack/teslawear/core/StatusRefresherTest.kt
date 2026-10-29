@@ -34,9 +34,18 @@ class StatusRefresherTest {
         assertEquals(0, ble.probes)
     }
 
+    // The Tile runs as a service: Android rejects its scans (location is foreground-only), seen on the watch.
+    @Test fun tileRefreshNeverScans() = runTest {
+        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val stored = snap(locked = false, updatedAtMs = now - 10 * 60_000)
+        val result = refresher(ble, FakeCloud(), MemorySnapshots(stored)).refresh(RefreshTrigger.TILE_VIEW)
+        assertEquals(0, ble.probes)
+        assertEquals(stored, result)
+    }
+
     @Test fun tileRefreshMergesBleStatus() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, locked = false, updatedAtMs = now - 10 * 60_000))
-        val ble = FakeBle(reachable = true, status = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
+        val ble = FakeBle(known = snap(locked = true, updatedAtMs = now, channel = Channel.BLE))
         val result = refresher(ble, FakeCloud(), store).refresh(RefreshTrigger.TILE_VIEW)!!
         assertEquals(true, result.locked)
         assertEquals(50, result.batteryPct)

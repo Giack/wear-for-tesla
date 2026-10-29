@@ -103,11 +103,11 @@ class AndroidBleLink(
         }
     }
 
-    /** Background read: no scan (Android returns nothing there); a direct connection to the car's remembered address. */
+    /** Tile and background read: no scan (Android rejects it outside the foreground); a direct connection to the remembered address. */
     @android.annotation.SuppressLint("MissingPermission")
     override suspend fun readKnownCarStatus(): Snapshot? {
         if (context.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) return null
-        val address = knownCar(context).getString(KEY_ADDRESS, null) ?: return null.also { Diag.i("BLE background: no car seen yet") }
+        val address = knownCar(context).getString(KEY_ADDRESS, null) ?: return null.also { Diag.i("BLE direct: no car seen yet (open the app near the car once)") }
         val adapter = context.getSystemService(android.bluetooth.BluetoothManager::class.java)?.adapter?.takeIf { it.isEnabled } ?: return null
         if (!transport.isConnected) lastDevice = adapter.getRemoteDevice(address)
         return readStatus()
