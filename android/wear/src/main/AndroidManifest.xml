@@ -20,9 +20,11 @@
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
+        <!-- singleTask: launcher, Tile and complications all reuse one instance (Samsung launchers stacked copies). -->
         <activity
             android:name=".ui.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
