@@ -1,6 +1,7 @@
 package dev.giack.teslawear.core
 
 import dev.giack.teslawear.core.fleet.AuthRequiredException
+import dev.giack.teslawear.core.fleet.FleetRejectedException
 import dev.giack.teslawear.core.fleet.FleetResult
 import dev.giack.teslawear.core.fleet.VehicleAsleepException
 import dev.giack.teslawear.protocol.CommandResult
@@ -47,6 +48,8 @@ class CommandRouter(
             }
         } catch (_: AuthRequiredException) {
             RouteOutcome.AuthRequired
+        } catch (e: FleetRejectedException) {
+            RouteOutcome.Done(CommandResult.Failed("Fleet API ${e.code}"), Channel.CLOUD)
         } catch (_: VehicleAsleepException) {
             RouteOutcome.Unreachable
         } catch (_: TransportUnavailableException) {

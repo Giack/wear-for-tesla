@@ -14,6 +14,7 @@ class SnapshotAfterCommandTest {
         assertEquals(true, base.afterCommand(VehicleCommand.ChargePortOpen, 5, Channel.BLE).chargePortOpen)
         assertEquals(true, base.afterCommand(VehicleCommand.VentWindows, 5, Channel.BLE).windowsOpen)
         assertEquals(true, base.afterCommand(VehicleCommand.OpenTrunk, 5, Channel.BLE).trunkOpen)
+        assertEquals(true, base.afterCommand(VehicleCommand.OpenFrunk, 5, Channel.BLE).frunkOpen)
         assertEquals(21.5f, base.afterCommand(VehicleCommand.SetTemp(21.5f), 5, Channel.BLE).setTempC)
     }
 

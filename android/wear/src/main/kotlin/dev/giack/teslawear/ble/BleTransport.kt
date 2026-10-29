@@ -31,13 +31,15 @@ class BleTransport(private val context: Context, private val deviceProvider: sus
     override val authMethod = AuthMethod.AES_GCM
 
     private val mutex = Mutex()
-    private var gatt: BluetoothGatt? = null
-    private var txChar: BluetoothGattCharacteristic? = null
-    private var blockLen = 20
-    private var ready: CompletableDeferred<Unit>? = null
-    private var writeDone: CompletableDeferred<Int>? = null
+    // Written from GATT binder threads as well as from the sending coroutine.
+    @Volatile private var gatt: BluetoothGatt? = null
+    @Volatile private var txChar: BluetoothGattCharacteristic? = null
+    @Volatile private var blockLen = 20
+    @Volatile private var ready: CompletableDeferred<Unit>? = null
+    @Volatile private var writeDone: CompletableDeferred<Int>? = null
     private val reassembler = BleFraming.Reassembler()
-    private val incoming = Channel<RoutableMessage>(Channel.UNLIMITED)
+    /** Replies from the car; null means the link dropped, which ends a pending wait at once. */
+    private val incoming = Channel<RoutableMessage?>(Channel.UNLIMITED)
     @Volatile var lastUseMs = 0L
         private set
 
@@ -84,10 +86,11 @@ class BleTransport(private val context: Context, private val deviceProvider: sus
 
     private suspend fun awaitReply(request: RoutableMessage, timeoutMs: Long): RoutableMessage? = withTimeoutOrNull(timeoutMs) {
         var msg = incoming.receive()
-        while (!msg.isReplyTo(request)) {
+        while (msg != null && !msg.isReplyTo(request)) {
             Diag.i("BLE ignored message for ${describe(msg.toDestination)}")
             msg = incoming.receive()
         }
+        if (msg == null) Diag.w("BLE link lost while waiting for a reply")
         msg
     }
 
@@ -95,9 +98,12 @@ class BleTransport(private val context: Context, private val deviceProvider: sus
         if (d.hasRoutingAddress()) "another request" else "domain ${d.domainValue}"
 
     private suspend fun write(chunk: ByteArray) {
-        val g = gatt ?: throw TransportUnavailableException("not connected")
+        // Read once: a disconnect callback may clear them at any moment.
+        val g = gatt
+        val tx = txChar
+        if (g == null || tx == null) throw TransportUnavailableException("not connected")
         val done = CompletableDeferred<Int>().also { writeDone = it }
-        val status = g.writeCharacteristic(txChar!!, chunk, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+        val status = g.writeCharacteristic(tx, chunk, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
         if (status != BluetoothStatusCodes.SUCCESS) throw TransportUnavailableException("write rejected: $status")
         val result = withTimeoutOrNull(WRITE_TIMEOUT_MS) { done.await() } ?: throw TransportUnavailableException("write timeout")
         if (result != BluetoothGatt.GATT_SUCCESS) throw TransportUnavailableException("write failed: $result")
@@ -136,7 +142,10 @@ class BleTransport(private val context: Context, private val deviceProvider: sus
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     ready?.completeExceptionally(TransportUnavailableException("disconnected"))
                     writeDone?.complete(-1)
-                    if (gatt === g) { gatt = null; txChar = null; ready = null }
+                    if (gatt === g) {
+                        gatt = null; txChar = null; ready = null
+                        incoming.trySend(null)
+                    }
                     g.close()
                 }
             }

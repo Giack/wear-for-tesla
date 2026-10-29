@@ -15,6 +15,7 @@ class StatusMappingTest {
         .setVehicleSleepStatus(Vcsec.VehicleSleepStatus_E.VEHICLE_SLEEP_STATUS_ASLEEP)
         .setClosureStatuses(Vcsec.ClosureStatuses.newBuilder()
             .setRearTrunk(Vcsec.ClosureState_E.CLOSURESTATE_OPEN)
+            .setFrontTrunk(Vcsec.ClosureState_E.CLOSURESTATE_OPEN)
             .setChargePort(Vcsec.ClosureState_E.CLOSURESTATE_CLOSED))
         .build()
 
@@ -22,6 +23,7 @@ class StatusMappingTest {
         val s = BleStatusMapper.fromVcsec(vcsec, nowMs = 9)
         assertEquals(true, s.locked)
         assertEquals(true, s.trunkOpen)
+        assertEquals(true, s.frunkOpen)
         assertEquals(false, s.chargePortOpen)
         assertNull(s.batteryPct)
         assertEquals(9, s.updatedAtMs)
@@ -46,7 +48,7 @@ class StatusMappingTest {
             .setClimateState(Vehicle.ClimateState.newBuilder()
                 .setInsideTempCelsius(19.5f).setDriverTempSetting(21.5f).setIsClimateOn(true))
             .setClosuresState(Vehicle.ClosuresState.newBuilder()
-                .setWindowOpenPassengerFront(true).setLocked(false))
+                .setWindowOpenPassengerFront(true).setLocked(false).setDoorOpenTrunkFront(true))
             .build()
         val response = CarServer.Response.newBuilder().setVehicleData(data).build()
         val s = BleStatusMapper.fromCarServer(response, nowMs = 3)!!
@@ -59,6 +61,7 @@ class StatusMappingTest {
         assertEquals(21.5f, s.setTempC)
         assertEquals(true, s.windowsOpen)
         assertEquals(false, s.locked)
+        assertEquals(true, s.frunkOpen)
     }
 
     @Test fun carServerWithoutDataIsNull() = assertNull(BleStatusMapper.fromCarServer(CarServer.Response.getDefaultInstance(), 0))

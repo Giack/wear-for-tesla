@@ -9,6 +9,11 @@ interface BleLink {
     val commands: CommandRunner
     /** Status readable without waking the car; null if nothing could be read. */
     suspend fun readStatus(): Snapshot?
+    /**
+     * Like [readStatus] but without scanning: connects straight to the car seen last time (scans
+     * return nothing in the background). Null if no car is known or it is out of range.
+     */
+    suspend fun readKnownCarStatus(): Snapshot? = null
 }
 
 /** Fleet API path to the car. */

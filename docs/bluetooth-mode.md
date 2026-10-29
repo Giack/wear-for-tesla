@@ -10,6 +10,21 @@ In Bluetooth mode the watch talks to the car directly, like the Tesla phone app 
 
 ## Pairing, step by step
 
+<div class="screens" markdown>
+<figure markdown="span">
+![Welcome screen explaining Bluetooth mode](assets/screens/onboarding-welcome.png)
+<figcaption>Welcome</figcaption>
+</figure>
+<figure markdown="span">
+![Car step: model, paint and wheels](assets/screens/onboarding-car.png)
+<figcaption>1 · Your car</figcaption>
+</figure>
+<figure markdown="span">
+![VIN step with where to find it](assets/screens/onboarding-vin.png)
+<figcaption>2 · The VIN</figcaption>
+</figure>
+</div>
+
 1. **Welcome.** Tap **Start**.
 2. **Your car.** Pick the model, paint and wheels. This only chooses the picture: the car does not report its configuration over Bluetooth. (Fleet mode replaces it later with the real one.)
 3. **The VIN.** Tap **Enter the VIN** and type it with the watch keyboard, by voice, or from your phone. Case, spaces and dashes don't matter; the letters I, O and Q never appear in a VIN and are rejected.
@@ -21,6 +36,25 @@ In Bluetooth mode the watch talks to the car directly, like the Tesla phone app 
 You can check the new key on the car's screen under **Controls → Locks**.
 
 ## Everyday use
+
+<div class="screens" markdown>
+<figure markdown="span">
+![Home screen with the car's state](assets/screens/home-model-y.png)
+<figcaption>State</figcaption>
+</figure>
+<figure markdown="span">
+![Command buttons: lock, frunk, trunk](assets/screens/actions.png)
+<figcaption>Commands</figcaption>
+</figure>
+<figure markdown="span">
+![Climate card with inside and set temperature](assets/screens/climate.png)
+<figcaption>Climate</figcaption>
+</figure>
+<figure markdown="span">
+![Tile with quick actions](assets/screens/tile.png)
+<figcaption>Tile</figcaption>
+</figure>
+</div>
 
 - The home screen shows lock state, doors, trunk, frunk, battery and climate whenever the car is within Bluetooth range (a few metres to a few tens of metres).
 - Commands work the same way. Hold the button until the ring fills to confirm.

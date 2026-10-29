@@ -55,6 +55,7 @@ class AndroidBleLink(
     private fun seen(device: BluetoothDevice) {
         lastDevice = device
         lastSeenMs = nowMs()
+        knownCar(context).edit().putString(KEY_ADDRESS, device.address).apply()
     }
 
     private fun permitted(): Boolean = scanner.permissionsOk()
@@ -100,6 +101,16 @@ class AndroidBleLink(
                 throw e
             }
         }
+    }
+
+    /** Tile and background read: no scan (Android rejects it outside the foreground); a direct connection to the remembered address. */
+    @android.annotation.SuppressLint("MissingPermission")
+    override suspend fun readKnownCarStatus(): Snapshot? {
+        if (context.checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) return null
+        val address = knownCar(context).getString(KEY_ADDRESS, null) ?: return null.also { Diag.i("BLE direct: no car seen yet (open the app near the car once)") }
+        val adapter = context.getSystemService(android.bluetooth.BluetoothManager::class.java)?.adapter?.takeIf { it.isEnabled } ?: return null
+        if (!transport.isConnected) lastDevice = adapter.getRemoteDevice(address)
+        return readStatus()
     }
 
     override suspend fun readStatus(): Snapshot? {
@@ -157,12 +168,18 @@ class AndroidBleLink(
         }
     }
 
-    private companion object {
-        fun describe(e: Throwable): String =
+    companion object {
+        private const val KEY_ADDRESS = "address"
+        private fun knownCar(context: Context) = context.getSharedPreferences("ble_known_car", Context.MODE_PRIVATE)
+
+        /** Forgets the car's Bluetooth address (car removed). */
+        fun forgetKnownCar(context: Context) = knownCar(context).edit().clear().apply()
+
+        private fun describe(e: Throwable): String =
             generateSequence(e) { it.cause }.take(3).joinToString(" ← ") { "${it.javaClass.simpleName}: ${it.message}" }
 
-        const val SCAN_MS = 3_000L
-        const val SEEN_GRACE_MS = 30_000L
-        const val IDLE_DISCONNECT_MS = 10_000L
+        private const val SCAN_MS = 3_000L
+        private const val SEEN_GRACE_MS = 30_000L
+        private const val IDLE_DISCONNECT_MS = 10_000L
     }
 }

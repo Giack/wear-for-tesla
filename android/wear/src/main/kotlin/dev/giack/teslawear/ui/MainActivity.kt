@@ -36,7 +36,12 @@ class MainActivity : ComponentActivity() {
                     var showSetup by remember { mutableStateOf(false) }
                     var showAbout by remember { mutableStateOf(false) }
                     val onboarded = onboardingUi.step == OnboardingStep.DONE
-                    LaunchedEffect(onboarded) { if (onboarded) { setup.reload(); home.open() } }
+                    // onResume opens Home on every launch; this covers only onboarding finishing on screen.
+                    var wasOnboarded by remember { mutableStateOf(onboarded) }
+                    LaunchedEffect(onboarded) {
+                        if (onboarded && !wasOnboarded) { setup.reload(); home.open() }
+                        wasOnboarded = onboarded
+                    }
                     BackHandler(enabled = onboarded && showSetup && !showAbout) { showSetup = false }
                     BackHandler(enabled = showAbout) { showAbout = false }
                     when {

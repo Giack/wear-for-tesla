@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,7 +76,14 @@ class ConfirmActivity : ComponentActivity() {
             TeslaTheme {
                 val vm: ConfirmViewModel = viewModel(factory = viewModelFactory { initializer { ConfirmViewModel(application, action) } })
                 val ui by vm.controller.ui.collectAsState()
-                LaunchedEffect(ui.phase) { if (ui.phase == Phase.DONE) { delay(1_200); finish() } }
+                val haptics = LocalHapticFeedback.current
+                LaunchedEffect(ui.phase) {
+                    when (ui.phase) {
+                        Phase.DONE -> { haptics.performHapticFeedback(HapticFeedbackType.Confirm); delay(1_200); finish() }
+                        Phase.ERROR, Phase.UNCERTAIN -> haptics.performHapticFeedback(HapticFeedbackType.Reject)
+                        else -> Unit
+                    }
+                }
                 Column(
                     Modifier.fillMaxSize().padding(16.dp),
                     verticalArrangement = Arrangement.Center,
@@ -99,7 +108,7 @@ class ConfirmActivity : ComponentActivity() {
                     message?.let {
                         Text(
                             it, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp),
-                            color = if (ui.phase == Phase.ERROR) TeslaColors.Red else TeslaColors.Muted,
+                            color = if (ui.phase == Phase.ERROR || ui.phase == Phase.UNCERTAIN) TeslaColors.Red else TeslaColors.Muted,
                         )
                     }
                 }

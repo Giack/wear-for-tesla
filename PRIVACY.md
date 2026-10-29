@@ -5,7 +5,7 @@ Wear for Tesla has no server, no account, no analytics and no advertising. **Not
 ## What stays on the watch
 
 - The **BLE key** is created in the watch's Android Keystore and never leaves the watch.
-- The **VIN**, the car profile and the car's last known state are kept in the app's private storage.
+- The **VIN**, the car profile, the car's Bluetooth address (for the background check) and the car's last known state are kept in the app's private storage.
 - In Fleet mode, the **Cloud key**, your Developer app's credentials and your Tesla sign-in **tokens** are kept in the app's private storage too. *Settings → Turn off Fleet mode* deletes them; *Settings → Remove car* deletes everything.
 
 ## Who the app talks to
