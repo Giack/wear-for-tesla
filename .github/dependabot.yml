@@ -4,3 +4,8 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      # v6+ moves caching into a proprietary component whose terms the maintainer would accept
+      # personally (unilateral changes, indemnity, US arbitration). Stay on MIT-licensed v5.
+      - dependency-name: gradle/actions/setup-gradle
+        update-types: ["version-update:semver-major"]
