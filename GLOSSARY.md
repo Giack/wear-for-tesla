@@ -43,8 +43,12 @@ The maintainer's own build, which adds Tesla-owned material (logo, Official rend
 _Avoid_: private build, debug build
 
 **Car illustration**:
-A project-owned drawing of the car, tinted with the car's paint colour; the only car image in the Public build.
+A project-owned drawing of the car, tinted with the car's paint colour; the Public build's car image for models without a Car render.
 _Avoid_: render, silhouette
+
+**Car render**:
+Frames rendered from a project-owned 3D model of the car (`design/car-model`), in the same two layers as a Car illustration so they take the car's paint colour; they rotate on the home screen.
+_Avoid_: Official render, 3D model (the source, not the images)
 
 **Official render**:
 An image of the car produced from Tesla's own assets (the configurator compositor or the Tesla app's 3D models); only in the Personal build.

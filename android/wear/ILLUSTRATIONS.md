@@ -20,3 +20,12 @@ so the two read as the same family. Both views of a model use the same wheel siz
 To add a model or a view, keep the same grid and layer split, map it in `IllustrationLayers`
 (`render/IllustratedCarImages.kt`) and extend `IllustrationLayersTest`. Preview a drawing in any paint with
 `python3 tools/preview_illustration.py <paint.xml> <details.xml> "#RRGGBB" out.svg`.
+
+## Car renders
+
+Models with a project-owned 3D model (`design/car-model`) show Car renders instead: 16 frames around the
+car in `src/main/assets/cars/<model>/`, `paint_NN.webp` and `details_NN.webp`, composed exactly like the
+illustration's two layers (paint multiplied by the paint colour, details on top). Frame 00 is the
+three-quarter front; the Tile uses the side frame. They are mapped in `CarRenders` (core) and drawn by
+`RenderedCarImages`; models without renders fall back to the illustration. Regenerate them with
+`tools/car_model/render_car.py` (see its README) and copy the WebP files over.

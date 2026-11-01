@@ -24,3 +24,7 @@ HANDOFF.md
 
 # MkDocs output
 site/
+
+# Car model references: Tesla images used only to model over, never committed (ADR-0002)
+design/car-model/refs
+*.blend1
