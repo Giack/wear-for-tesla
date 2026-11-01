@@ -2,7 +2,7 @@ package dev.giack.teslawear.core.car
 
 import dev.giack.teslawear.core.setup.CarModel
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class CarRendersTest {
@@ -18,7 +18,14 @@ class CarRendersTest {
         assertEquals(2, CarRenders.of(CarModel.MODEL_Y)!!.sideFrame)
     }
 
-    @Test fun modelsWithoutAModelFallBackToTheIllustration() {
-        assertNull(CarRenders.of(CarModel.MODEL_3))
+    @Test fun modelThreeHasItsOwnFrames() {
+        val set = CarRenders.of(CarModel.MODEL_3)!!
+        assertEquals(16, set.frames)
+        assertEquals("cars/model_3/paint_07.webp", set.paint(7))
+        assertEquals(2, set.sideFrame)
+    }
+
+    @Test fun everyModelHasRenders() {
+        CarModel.entries.forEach { assertNotNull("$it has no renders", CarRenders.of(it)) }
     }
 }

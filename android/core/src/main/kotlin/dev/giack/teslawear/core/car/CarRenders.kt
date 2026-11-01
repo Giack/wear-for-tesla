@@ -15,6 +15,7 @@ data class RenderSet(val dir: String, val frames: Int, val sideFrame: Int) {
 object CarRenders {
     private val sets = mapOf(
         CarModel.MODEL_Y to RenderSet("cars/model_y", frames = 16, sideFrame = 2),
+        CarModel.MODEL_3 to RenderSet("cars/model_3", frames = 16, sideFrame = 2),
     )
 
     /** The render set for [model], or null when the model has only a Car illustration. */

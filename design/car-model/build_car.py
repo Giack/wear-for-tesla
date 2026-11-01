@@ -1,7 +1,8 @@
-"""Builds the project's Model Y (2025) from shape data in model_y_2025.json.
+"""Builds one of the project's car models from its shape data (<car>.json next to this script).
 
-Run inside Blender with design/car-model/model_y.blend open:
-    exec(open("design/car-model/build_model_y.py").read())    (or: blender -b model_y.blend --python ...)
+Run inside Blender with the car's .blend open, naming the data file in CAR:
+    CAR = "model_y_2025"; exec(open("design/car-model/build_car.py").read())
+    (or: CAR_DATA=model_3_2024 blender -b model_3.blend --python design/car-model/build_car.py)
 The body is lofted from cross-sections. The traced side profile gives each section's roof, floor and belt
 line; public dimensions give the scale; the section is a stepped shape (wide lower body, shoulder, narrower
 glasshouse, rounded roof) and the plan view rounds the ends. Materials follow the README contract
@@ -11,11 +12,39 @@ import bpy, bmesh, json, math, os
 import numpy as np
 
 HERE = os.path.dirname(bpy.data.filepath)
-D = json.load(open(os.path.join(HERE, "model_y_2025.json")))
-DIM, SP, SEC, PLAN = D["dimensions_m"], D["side_px"], D["section"], D["plan"]
+CAR = globals().get("CAR") or os.environ.get("CAR_DATA", "model_y_2025")
+D = json.load(open(os.path.join(HERE, CAR + ".json")))
+DIM, SP, SEC, PLAN, LIGHTS = D["dimensions_m"], D["side_px"], D["section"], D["plan"], D["lights"]
+
+
+def setup_materials():
+    """The look every car shares (the file's own values do not matter, so any starter .blend renders the same)."""
+    spec = {  # name: (base colour, metallic, roughness, specular, emission colour, emission strength)
+        "Paint": ((0.8, 0.8, 0.8), 0.0, 0.3, 0.5, None, 0.0),
+        "Glass": ((0.004, 0.005, 0.006), 0.0, 0.22, 0.35, None, 0.0),
+        "Trim": ((0.015, 0.015, 0.015), 0.0, 0.45, 0.5, None, 0.0),
+        "Tire": ((0.012, 0.012, 0.013), 0.0, 0.9, 0.25, None, 0.0),
+        "Rim": ((0.72, 0.73, 0.75), 1.0, 0.25, 0.5, None, 0.0),
+        "Light": ((0.25, 0.27, 0.3), 0.0, 0.1, 0.5, (0.85, 0.9, 1.0), 0.15),
+        "TailLight": ((0.03, 0.004, 0.004), 0.0, 0.1, 0.5, (1.0, 0.03, 0.02), 1.5),
+    }
+    for name, (col, metal, rough, specular, ecol, estr) in spec.items():
+        m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+        m.use_nodes = True
+        m.use_fake_user = True
+        b = m.node_tree.nodes["Principled BSDF"]
+        b.inputs["Base Color"].default_value = (*col, 1)
+        b.inputs["Metallic"].default_value = metal
+        b.inputs["Roughness"].default_value = rough
+        b.inputs["Specular IOR Level"].default_value = specular
+        b.inputs["Emission Color"].default_value = (*(ecol or col), 1)
+        b.inputs["Emission Strength"].default_value = estr
+
+
+setup_materials()
 
 L, WIDTH, WB, TYRE_R = DIM["length"], DIM["width"], DIM["wheelbase"], DIM["tyre_radius"]
-TYRE_W = 0.255
+TYRE_W = DIM.get("tyre_width", 0.255)
 STATIONS = 200
 
 # --- Side profile in metres: y along the car (front = -y), z up from the ground -------------------
@@ -170,8 +199,8 @@ for name in ("Paint", "Glass", "Trim", "Light", "TailLight"):
 IDX = {m.name: i for i, m in enumerate(me.materials)}
 
 # --- Materials by zone ----------------------------------------------------------------------------------
-HANDLE_Z = (SP["ground_y"] - 390) * s
-HANDLES = [((560 - mid_x) * s, (610 - mid_x) * s), ((945 - mid_x) * s, (985 - mid_x) * s)]
+HANDLE_Z = (SP["ground_y"] - SP["handle_y"]) * s
+HANDLES = [((a - mid_x) * s, (b - mid_x) * s) for a, b in SP["handles_x"]]
 me.update()
 for f in me.polygons:
     cx, cy, cz = f.center
@@ -215,13 +244,15 @@ def strip(name, material, axis, lo, hi, keep, lift=0.0015):
     return o
 
 
-strip("LightBarFront", "Light", "z", 0.713, 0.737, lambda c, n: c.y < y_front + 0.32 and n.y < 0.1)
+LF, LR = LIGHTS["front"], LIGHTS["rear"]
+strip("LightsFront", "Light", "z", *LF["z"],
+      lambda c, n: c.y < y_front + LF["reach_m"] and n.y < 0.1 and abs(c.x) >= LF["min_x"])
 strip("Intake", "Trim", "z", 0.0, 0.40, lambda c, n: c.y < y_front + 0.35 and n.y < -0.3)   # lower front intake
-strip("LightBarRear", "TailLight", "z", 1.038, 1.062, lambda c, n: c.y > y_rear - 0.35 and n.y > 0.3)  # wraps only round the corners
+strip("LightsRear", "TailLight", "z", *LR["z"],                                             # wrap only round the corners
+      lambda c, n: c.y > y_rear - LR["reach_m"] and n.y > 0.3 and abs(c.x) >= LR["min_x"])
 for a, b in HANDLES:
     strip("Handle", "Trim", "z", HANDLE_Z - 0.009, HANDLE_Z + 0.009, lambda c, n, a=a, b=b: abs(n.x) > 0.7 and a <= c.y <= b)
-SEAMS = [(482, 0.0), (770, 0.0), (1010, 0.75)]           # door seams: photo x, lowest height (m)
-for x_px, zmin in SEAMS:
+for x_px, zmin in SP["seams"]:                            # door seams: photo x, lowest height (m)
     ys = (x_px - mid_x) * s
     strip("Seam", "Trim", "y", ys - 0.0025, ys + 0.0025,
           lambda c, n, zmin=zmin: abs(n.x) > 0.5 and max(floor_(c.y) + 0.09, zmin) < c.z < belt(c.y) - 0.01, lift=0.001)
