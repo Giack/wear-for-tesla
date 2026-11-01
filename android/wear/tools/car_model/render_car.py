@@ -26,7 +26,8 @@ scene = bpy.context.scene
 car = bpy.data.collections.get("Car")
 if car is None:
     sys.exit("No 'Car' collection in this file (see README.md)")
-car_objs = [o for o in car.all_objects if o.type == "MESH"]
+# Helpers the model hides from render (boolean cutters and the like) stay hidden.
+car_objs = [o for o in car.all_objects if o.type == "MESH" and not o.hide_render]
 
 # --- Render settings -------------------------------------------------------------------------------
 scene.render.engine = "CYCLES"
@@ -64,7 +65,8 @@ nt = world.node_tree
 env = nt.nodes.new("ShaderNodeTexEnvironment")
 env.image = bpy.data.images.load(os.path.join(bpy.utils.system_resource("DATAFILES", path="studiolights/world"), "studio.exr"))
 nt.links.new(env.outputs["Color"], nt.nodes["Background"].inputs["Color"])
-nt.nodes["Background"].inputs["Strength"].default_value = 1.0
+# Softer than the HDRI's default: at 1.0 its bright windows burn white patches into glossy paint and glass.
+nt.nodes["Background"].inputs["Strength"].default_value = 0.6
 
 lo = Vector((min((o.matrix_world @ Vector(c)).x for o in car_objs for c in o.bound_box),
              min((o.matrix_world @ Vector(c)).y for o in car_objs for c in o.bound_box),

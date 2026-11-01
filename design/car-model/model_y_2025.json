@@ -1,0 +1,30 @@
+{
+  "_about": "Model Y (2025) shape data for build_model_y.py. Side-view points were traced by eye on a studio side photo (1400 px wide) and are only numbers; heights and lengths are rescaled to the public dimensions below. Section ratios come from a straight rear view. Part of Wear for Tesla, Apache-2.0.",
+  "dimensions_m": {"length": 4.790, "width": 1.921, "height": 1.624, "wheelbase": 2.890, "tyre_radius": 0.356},
+  "side_px": {
+    "nose_x": 185, "tail_x": 1253, "ground_y": 607,
+    "front_wheel_x": 367.5, "rear_wheel_x": 1055,
+    "top": [[185, 478], [188, 458], [200, 445], [225, 425], [260, 408], [300, 395], [375, 375], [450, 362], [475, 360],
+            [500, 345], [550, 310], [600, 285], [650, 267], [700, 256], [725, 251], [800, 247], [900, 250], [1000, 265],
+            [1100, 295], [1150, 312], [1200, 327], [1230, 335], [1236, 400], [1244, 440], [1250, 470], [1253, 495]],
+    "bottom": [[185, 500], [190, 525], [200, 545], [260, 550], [470, 565], [700, 565], [930, 560], [1150, 548],
+               [1240, 545], [1248, 535], [1253, 505]],
+    "belt": [[475, 370], [575, 370], [725, 365], [800, 355], [900, 347], [1000, 337], [1100, 332], [1253, 332]],
+    "side_glass_x": [475, 1075]
+  },
+  "section": {
+    "_about": "half-width as a fraction of the plan half-width, by zone (from the rear view)",
+    "floor": 0.90, "lower_max": 1.0, "shoulder": 0.90, "glass_base": 0.74, "glass_top": 0.66, "roof_round_m": 0.13
+  },
+  "plan": {
+    "_about": "top-view rounding of the ends: length of the rounded zone and the width left at the very tip",
+    "front_m": 0.95, "front_tip": 0.38, "front_exp": 2.2,
+    "rear_m": 0.7, "rear_tip": 0.55, "rear_exp": 2.0,
+    "nose_top_taper": 0.22, "nose_taper_m": 0.6,
+    "tail_top_taper": 0.18, "tail_taper_m": 0.55
+  },
+  "haunches": {
+    "_about": "extra half-width over the wheels (fraction), and its length along the car (m)",
+    "front": 0.04, "rear": 0.07, "length_m": 0.8
+  }
+}
