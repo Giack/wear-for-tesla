@@ -31,6 +31,9 @@ blockout car, useful only to test the pipeline.
 blender -b model_y.blend --python tools/car_model/render_car.py -- out/ --preview "#8C0B14"
 ```
 
+The studio works like a turntable: the HDRI, a high key light and a low frontal fill turn with the camera,
+so every frame is lit alike (the rear is not in shadow just because the lights sit at the front).
+
 Per frame (16 by default, frame 00 = front-left three-quarter) Cycles renders three passes:
 
 | Pass    | Paint materials             | Other materials | Floor           | Goes into      |

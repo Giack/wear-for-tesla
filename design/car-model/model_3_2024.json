@@ -233,13 +233,13 @@
   },
   "plan": {
     "_about": "top-view rounding of the ends: length of the rounded zone and the width left at the very tip",
-    "front_m": 0.95,
-    "front_tip": 0.38,
-    "front_exp": 2.2,
+    "front_m": 0.9,
+    "front_tip": 0.5,
+    "front_exp": 2.0,
     "rear_m": 0.6,
     "rear_tip": 0.6,
     "rear_exp": 2.2,
-    "nose_top_taper": 0.2,
+    "nose_top_taper": 0.12,
     "nose_taper_m": 0.6,
     "tail_top_taper": 0.15,
     "tail_taper_m": 0.5
@@ -254,11 +254,11 @@
     "_about": "front lamps and tail lamps: height band (m), how far from the end they reach (m), and the inner edge |x| (m); 0 = full width",
     "front": {
       "z": [
-        0.655,
-        0.695
+        0.645,
+        0.69
       ],
-      "reach_m": 0.4,
-      "min_x": 0.42
+      "reach_m": 0.3,
+      "min_x": 0.4
     },
     "rear": {
       "z": [
@@ -267,6 +267,17 @@
       ],
       "reach_m": 0.4,
       "min_x": 0.38
+    }
+  },
+  "trim": {
+    "_about": "black trim: sill strip height above the floor line (m); lower front intake band (m) and its half-width (m)",
+    "sill_m": 0.035,
+    "intake": {
+      "z": [
+        0.22,
+        0.32
+      ],
+      "half_width": 0.55
     }
   }
 }

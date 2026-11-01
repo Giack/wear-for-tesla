@@ -7,7 +7,7 @@ Part of Wear for Tesla, Apache-2.0.
 """
 import bpy, sys, os, math, argparse
 import numpy as np
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ap = argparse.ArgumentParser()
@@ -65,6 +65,10 @@ nt = world.node_tree
 env = nt.nodes.new("ShaderNodeTexEnvironment")
 env.image = bpy.data.images.load(os.path.join(bpy.utils.system_resource("DATAFILES", path="studiolights/world"), "studio.exr"))
 nt.links.new(env.outputs["Color"], nt.nodes["Background"].inputs["Color"])
+# The studio turns with the camera (a turntable: the car turns under fixed lights), so every frame is lit alike.
+env_map = nt.nodes.new("ShaderNodeMapping")
+nt.links.new(nt.nodes.new("ShaderNodeTexCoord").outputs["Generated"], env_map.inputs["Vector"])
+nt.links.new(env_map.outputs["Vector"], env.inputs["Vector"])
 # Softer than the HDRI's default: at 1.0 its bright windows burn white patches into glossy paint and glass.
 nt.nodes["Background"].inputs["Strength"].default_value = 0.6
 
@@ -77,11 +81,28 @@ hi = Vector((max((o.matrix_world @ Vector(c)).x for o in car_objs for c in o.bou
 center = (lo + hi) / 2
 size = hi - lo
 
-key = bpy.data.objects.new("RigKey", bpy.data.lights.new("RigKey", "AREA"))
-key.data.energy, key.data.size = 1500, 4.0
-key.location = center + Vector((2.5, -3.0, 5.0))
-key.rotation_euler = (center - key.location).to_track_quat("-Z", "Y").to_euler()
-scene.collection.objects.link(key)
+def area_light(name, energy, size_m):
+    o = bpy.data.objects.new(name, bpy.data.lights.new(name, "AREA"))
+    o.data.energy, o.data.size = energy, size_m
+    scene.collection.objects.link(o)
+    return o
+
+
+# Offsets as seen from frame 0 (camera at the front-left three-quarter); they turn with the camera.
+key = area_light("RigKey", 1500, 4.0)
+KEY_OFFSET = Vector((2.5, -3.0, 5.0))      # high, from the camera's side
+fill = area_light("RigFill", 450, 5.0)
+FILL_OFFSET = Vector((-1.0, -4.5, 1.0))    # low and frontal: lifts fascias and lower doors out of shadow
+fill.visible_glossy = False                # it lifts shadows; as a reflection it would wash flat panels white
+
+
+def place_studio(turn):
+    """Rotate the lights and the HDRI by `turn` (radians) round the car's vertical axis."""
+    rot = Matrix.Rotation(turn, 3, "Z")
+    for light, offset in ((key, KEY_OFFSET), (fill, FILL_OFFSET)):
+        light.location = center + rot @ offset
+        light.rotation_euler = (center - light.location).to_track_quat("-Z", "Y").to_euler()
+    env_map.inputs["Rotation"].default_value = (0, 0, -turn)  # rotating the lookup turns the image the other way
 
 bpy.ops.mesh.primitive_plane_add(size=max(size.x, size.y) * 4, location=(center.x, center.y, lo.z))
 floor = bpy.context.object
@@ -171,6 +192,7 @@ paint, details, body = [], [], []
 for f in range(args.frames):
     # Car front faces -Y; frame 0 looks at the front-left three-quarter, then the camera turns around the car.
     a = math.radians(45) + 2 * math.pi * f / args.frames
+    place_studio(a - math.radians(45))
     cam.location = center + Vector((math.sin(a) * radius, -math.cos(a) * radius, radius * 0.22))
     cam.rotation_euler = (center - cam.location).to_track_quat("-Z", "Y").to_euler()
     layers = {}

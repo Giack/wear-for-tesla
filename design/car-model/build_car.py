@@ -15,17 +15,18 @@ HERE = os.path.dirname(bpy.data.filepath)
 CAR = globals().get("CAR") or os.environ.get("CAR_DATA", "model_y_2025")
 D = json.load(open(os.path.join(HERE, CAR + ".json")))
 DIM, SP, SEC, PLAN, LIGHTS = D["dimensions_m"], D["side_px"], D["section"], D["plan"], D["lights"]
+TRIM = D.get("trim", {})   # black trim: sill strip height, lower front intake band
 
 
 def setup_materials():
     """The look every car shares (the file's own values do not matter, so any starter .blend renders the same)."""
     spec = {  # name: (base colour, metallic, roughness, specular, emission colour, emission strength)
         "Paint": ((0.8, 0.8, 0.8), 0.0, 0.3, 0.5, None, 0.0),
-        "Glass": ((0.004, 0.005, 0.006), 0.0, 0.22, 0.35, None, 0.0),
+        "Glass": ((0.004, 0.005, 0.006), 0.0, 0.22, 0.2, None, 0.0),
         "Trim": ((0.015, 0.015, 0.015), 0.0, 0.45, 0.5, None, 0.0),
         "Tire": ((0.012, 0.012, 0.013), 0.0, 0.9, 0.25, None, 0.0),
         "Rim": ((0.72, 0.73, 0.75), 1.0, 0.25, 0.5, None, 0.0),
-        "Light": ((0.25, 0.27, 0.3), 0.0, 0.1, 0.5, (0.85, 0.9, 1.0), 0.15),
+        "Light": ((0.25, 0.27, 0.3), 0.0, 0.1, 0.5, (0.85, 0.9, 1.0), 0.5),
         "TailLight": ((0.03, 0.004, 0.004), 0.0, 0.1, 0.5, (1.0, 0.03, 0.02), 1.5),
     }
     for name, (col, metal, rough, specular, ecol, estr) in spec.items():
@@ -207,7 +208,7 @@ for f in me.polygons:
     nx, ny, nz = f.normal
     zb = floor_(cy)
     m = "Paint"
-    if nz < -0.6 or cz < zb + 0.08:
+    if nz < -0.6 or cz < zb + TRIM.get("sill_m", 0.08):
         m = "Trim"                                                   # underside, black sill strip
     elif cz > belt(cy) + 0.005 and roof(cy) - belt(cy) > 0.03:
         side = abs(nx) > 0.55
@@ -246,8 +247,9 @@ def strip(name, material, axis, lo, hi, keep, lift=0.0015):
 
 LF, LR = LIGHTS["front"], LIGHTS["rear"]
 strip("LightsFront", "Light", "z", *LF["z"],
-      lambda c, n: c.y < y_front + LF["reach_m"] and n.y < 0.1 and abs(c.x) >= LF["min_x"])
-strip("Intake", "Trim", "z", 0.0, 0.40, lambda c, n: c.y < y_front + 0.35 and n.y < -0.3)   # lower front intake
+      lambda c, n: c.y < y_front + LF["reach_m"] and n.y < LF.get("max_ny", 0.1) and abs(c.x) >= LF["min_x"])
+IN = TRIM.get("intake", {"z": [0.0, 0.40], "half_width": 9.0})                           # lower front intake
+strip("Intake", "Trim", "z", *IN["z"], lambda c, n: c.y < y_front + 0.35 and n.y < -0.3 and abs(c.x) <= IN["half_width"])
 strip("LightsRear", "TailLight", "z", *LR["z"],                                             # wrap only round the corners
       lambda c, n: c.y > y_rear - LR["reach_m"] and n.y > 0.3 and abs(c.x) >= LR["min_x"])
 for a, b in HANDLES:
