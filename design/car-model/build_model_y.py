@@ -49,7 +49,7 @@ def belt(y):
     b, r = float(np.interp(y, BELT_Y, BELT_Z)), roof(y)
     if y >= y_a:
         return b
-    t = min(max((y - (y_a - 0.25)) / 0.25, 0.0), 1.0)
+    t = min(max((y - (y_a - 0.12)) / 0.12, 0.0), 1.0)    # short blend: a crisp cowl line, not a hump
     return r + (b - r) * t
 
 
@@ -111,10 +111,11 @@ def section(y):
         g *= 1 + haunch(y) * math.sin(math.pi * min(max((t - 0.15) / 0.8, 0), 1))   # arches bulge mid-height
         g *= nose_taper(y, (z - zb) / max(zt - zb, 1e-3))
         pts.append((hw * g, z))
-    g0 = lerp(SEC["shoulder"] - 0.02, SEC["glass_base"], k)  # shoulder ledge, then the glasshouse
+    ws = smooth((y - y_a) / 0.7)                             # 0 at the windshield base: the glass is wide there
+    g0 = lerp(SEC["shoulder"] - 0.02, lerp(0.84, SEC["glass_base"], ws), k)  # shoulder ledge, then the glasshouse
     zg0 = zs + 0.03 * k
     zg1 = max(zt - rr, zg0)
-    wtop = hw * lerp(SEC["shoulder"] - 0.04, SEC["glass_top"], k)
+    wtop = hw * lerp(SEC["shoulder"] - 0.04, lerp(0.76, SEC["glass_top"], ws), k)
     for i in range(N_GH):
         t = i / N_GH
         z = lerp(zg0, zg1, t)
@@ -182,17 +183,48 @@ for f in me.polygons:
     elif cz > belt(cy) + 0.005 and roof(cy) - belt(cy) > 0.03:
         side = abs(nx) > 0.55
         m = "Glass" if (not side or glass_y[0] <= cy <= glass_y[1]) else "Paint"   # C-pillar is painted
-    elif cy < y_front + 0.30 and 0.705 < cz < 0.745 and ny < 0.2:
-        m = "Light"                                                  # full-width front light bar
-    elif cy < y_front + 0.22 and cz < 0.40:
-        m = "Trim"                                                   # lower front intake
-    elif cy > y_rear - 0.6 and ny > 0.45 and 1.00 < cz < 1.10:
-        m = "TailLight"                                              # full-width rear light bar, on rear-facing faces
     elif cy > y_rear - 0.22 and cz < 0.40:
         m = "Trim"                                                   # rear diffuser
-    elif abs(nx) > 0.8 and abs(cz - HANDLE_Z) < 0.012 and any(a <= cy <= b for a, b in HANDLES):
-        m = "Trim"                                                   # flush door handles
     f.material_index = IDX[m]
+
+
+# --- Clean-edged details: thin strips cut from the body surface between two parallel planes -------------
+def strip(name, material, axis, lo, hi, keep, lift=0.0015):
+    """A band of the body between planes axis=lo and axis=hi, kept where keep(center, normal), lifted off the paint."""
+    sb = bmesh.new()
+    sb.from_mesh(me)
+    no = [0, 0, 0]; no["xyz".index(axis)] = 1
+    co_lo = [0, 0, 0]; co_lo["xyz".index(axis)] = lo
+    co_hi = [0, 0, 0]; co_hi["xyz".index(axis)] = hi
+    bmesh.ops.bisect_plane(sb, geom=sb.verts[:] + sb.edges[:] + sb.faces[:], plane_co=co_lo, plane_no=no, clear_inner=True)
+    bmesh.ops.bisect_plane(sb, geom=sb.verts[:] + sb.edges[:] + sb.faces[:], plane_co=co_hi, plane_no=no, clear_outer=True)
+    sb.normal_update()
+    drop = [f for f in sb.faces if not keep(f.calc_center_median(), f.normal)]
+    bmesh.ops.delete(sb, geom=drop, context="FACES")
+    bmesh.ops.delete(sb, geom=[v for v in sb.verts if not v.link_faces], context="VERTS")
+    sb.normal_update()
+    for v in sb.verts:
+        v.co += v.normal * lift
+    m2 = bpy.data.meshes.new(name)
+    sb.to_mesh(m2); sb.free()
+    m2.materials.append(mat(material))
+    o = bpy.data.objects.new(name, m2)
+    car.objects.link(o)
+    for p in m2.polygons:
+        p.use_smooth = True
+    return o
+
+
+strip("LightBarFront", "Light", "z", 0.713, 0.737, lambda c, n: c.y < y_front + 0.32 and n.y < 0.1)
+strip("Intake", "Trim", "z", 0.0, 0.40, lambda c, n: c.y < y_front + 0.35 and n.y < -0.3)   # lower front intake
+strip("LightBarRear", "TailLight", "z", 1.038, 1.062, lambda c, n: c.y > y_rear - 0.35 and n.y > 0.3)  # wraps only round the corners
+for a, b in HANDLES:
+    strip("Handle", "Trim", "z", HANDLE_Z - 0.009, HANDLE_Z + 0.009, lambda c, n, a=a, b=b: abs(n.x) > 0.7 and a <= c.y <= b)
+SEAMS = [(482, 0.0), (770, 0.0), (1010, 0.75)]           # door seams: photo x, lowest height (m)
+for x_px, zmin in SEAMS:
+    ys = (x_px - mid_x) * s
+    strip("Seam", "Trim", "y", ys - 0.0025, ys + 0.0025,
+          lambda c, n, zmin=zmin: abs(n.x) > 0.5 and max(floor_(c.y) + 0.09, zmin) < c.z < belt(c.y) - 0.01, lift=0.001)
 
 # --- Wheel arches --------------------------------------------------------------------------------------
 for i, ya in enumerate(AXLES):
