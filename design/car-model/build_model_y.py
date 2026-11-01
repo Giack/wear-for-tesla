@@ -255,12 +255,42 @@ def add(op, name, material, coll=car, smooth_=True, **kw):
     return o
 
 
+def tyre(name, x, y, z, rim_r):
+    """A tyre lathed from its cross-section: tread, rounded shoulders, sidewalls bulging down to the rim."""
+    prof = []                                               # (radius, axial offset) round the section, closed
+    hw = TYRE_W / 2
+    for i in range(9):                                      # outer sidewall, rim to shoulder, slight bulge
+        t = i / 8
+        prof.append((lerp(rim_r, TYRE_R - 0.03, t), hw * (0.92 + 0.08 * math.sin(math.pi * t))))
+    for i in range(1, 8):                                   # rounded shoulder into the tread
+        a = (math.pi / 2) * i / 8
+        prof.append((TYRE_R - 0.03 + 0.03 * math.sin(a), hw - 0.03 + 0.03 * math.cos(a) - 0.0))
+    prof.append((TYRE_R, 0.0))
+    prof += [(r, -a) for r, a in reversed(prof[:-1])]       # mirror to the inner side
+    bm2 = bmesh.new()
+    seg = 96
+    rings2 = []
+    for k in range(seg):
+        th = 2 * math.pi * k / seg
+        rings2.append([bm2.verts.new((a, math.cos(th) * r, math.sin(th) * r)) for r, a in prof])
+    for k in range(seg):
+        A, B = rings2[k], rings2[(k + 1) % seg]
+        for j in range(len(prof) - 1):
+            bm2.faces.new((A[j], A[j + 1], B[j + 1], B[j]))
+    bmesh.ops.recalc_face_normals(bm2, faces=bm2.faces)
+    m2 = bpy.data.meshes.new(name); bm2.to_mesh(m2); bm2.free()
+    m2.materials.append(mat("Tire"))
+    for p in m2.polygons:
+        p.use_smooth = True
+    o = bpy.data.objects.new(name, m2); o.location = (x, y, z)
+    car.objects.link(o)
+    return o
+
+
 def wheel(tag, x, y, side):
     z = TYRE_R
-    t = add(bpy.ops.mesh.primitive_cylinder_add, tag + "Tyre", "Tire", vertices=96, radius=TYRE_R, depth=TYRE_W,
-            location=(x, y, z), rotation=(0, math.pi / 2, 0))
-    b = t.modifiers.new("Sidewall", "BEVEL"); b.width, b.segments = 0.05, 6
     rim_r = TYRE_R * 0.68
+    tyre(tag + "Tyre", x, y, z, rim_r)
     face = x + side * (TYRE_W / 2 + 0.004)
     add(bpy.ops.mesh.primitive_cylinder_add, tag + "Barrel", "Trim", vertices=96, radius=rim_r, depth=0.02,
         location=(face, y, z), rotation=(0, math.pi / 2, 0))
@@ -290,8 +320,12 @@ for side, lr in ((1, "L"), (-1, "R")):
     near = [abs(v.co.x) for v in me.vertices if abs(v.co.y - ym) < 0.04 and abs(v.co.z - zm) < 0.08]
     xm = (max(near) if near else plan_half(ym) * 0.8) + 0.06
     mo = add(bpy.ops.mesh.primitive_uv_sphere_add, "Mirror" + lr, "Paint", segments=32, ring_count=16, radius=1,
-             location=(side * xm, ym, zm))
-    mo.scale = (0.11, 0.065, 0.055)
+             location=(side * (xm + 0.03), ym + 0.02, zm + 0.01))
+    mo.scale = (0.10, 0.06, 0.05)
+    arm = add(bpy.ops.mesh.primitive_cube_add, "MirrorArm" + lr, "Trim", smooth_=False,
+              location=(side * (xm - 0.05), ym, zm - 0.015))
+    arm.scale = (0.06, 0.03, 0.012)
+    ab = arm.modifiers.new("Round", "BEVEL"); ab.width, ab.segments = 0.008, 2
 
 bpy.ops.object.select_all(action="DESELECT")
 bpy.ops.wm.save_mainfile()
