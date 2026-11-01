@@ -42,6 +42,12 @@ class MainActivity : ComponentActivity() {
                         if (onboarded && !wasOnboarded) { setup.reload(); home.open() }
                         wasOnboarded = onboarded
                     }
+                    // Leaving Settings: the car's model or paint may have changed, so Home redraws the car.
+                    var wasInSetup by remember { mutableStateOf(showSetup) }
+                    LaunchedEffect(showSetup) {
+                        if (wasInSetup && !showSetup && onboarded) home.reloadFrames()
+                        wasInSetup = showSetup
+                    }
                     BackHandler(enabled = onboarded && showSetup && !showAbout) { showSetup = false }
                     BackHandler(enabled = showAbout) { showAbout = false }
                     when {

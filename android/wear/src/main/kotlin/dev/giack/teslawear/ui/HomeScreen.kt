@@ -73,6 +73,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             graph.notifySurfaces()
         }
     }
+    /** The car profile may have changed (model, paint) while Settings was open: redraw the car. */
+    fun reloadFrames() = viewModelScope.launch { _frames.value = loadFrames() }
     // Decoding renders or drawing the illustration takes too long for the main thread.
     private suspend fun loadFrames() = withContext(Dispatchers.Default) { graph.carImages.frames() }
     fun send(action: QuickAction) = viewModelScope.launch { controller.send(action); graph.notifySurfaces() }
