@@ -22,12 +22,13 @@ def setup_materials():
     """The look every car shares (the file's own values do not matter, so any starter .blend renders the same)."""
     spec = {  # name: (base colour, metallic, roughness, specular, emission colour, emission strength)
         "Paint": ((0.8, 0.8, 0.8), 0.0, 0.3, 0.5, None, 0.0),
-        "Glass": ((0.004, 0.005, 0.006), 0.0, 0.22, 0.2, None, 0.0),
-        "Trim": ((0.015, 0.015, 0.015), 0.0, 0.45, 0.5, None, 0.0),
-        "Tire": ((0.012, 0.012, 0.013), 0.0, 0.9, 0.25, None, 0.0),
-        "Rim": ((0.72, 0.73, 0.75), 1.0, 0.25, 0.5, None, 0.0),
-        "Light": ((0.25, 0.27, 0.3), 0.0, 0.1, 0.5, (0.85, 0.9, 1.0), 0.5),
-        "TailLight": ((0.03, 0.004, 0.004), 0.0, 0.1, 0.5, (1.0, 0.03, 0.02), 1.5),
+        # Dark greenhouse. Kept mirror-like: a rougher roof turns the overhead studio into a white patch.
+        "Glass": ((0.004, 0.005, 0.006), 0.0, 0.2, 0.22, None, 0.0),
+        "Trim": ((0.012, 0.012, 0.013), 0.0, 0.42, 0.45, None, 0.0),
+        "Tire": ((0.018, 0.018, 0.02), 0.0, 0.72, 0.3, None, 0.0),
+        "Rim": ((0.78, 0.79, 0.82), 1.0, 0.16, 0.5, None, 0.0),
+        "Light": ((0.42, 0.45, 0.5), 0.0, 0.08, 0.5, (0.92, 0.96, 1.0), 1.8),
+        "TailLight": ((0.06, 0.008, 0.008), 0.0, 0.08, 0.5, (1.0, 0.045, 0.03), 2.6),
     }
     for name, (col, metal, rough, specular, ecol, estr) in spec.items():
         m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
@@ -278,7 +279,7 @@ bpy.ops.object.shade_smooth()
 bpy.ops.object.shade_auto_smooth(angle=math.radians(50))
 
 
-# --- Wheels: tyre and a ten-spoke project design -------------------------------------------------------
+# --- Wheels: tyre and an eight-spoke project design ----------------------------------------------------
 def add(op, name, material, coll=car, smooth_=True, **kw):
     op(**kw)
     o = bpy.context.object; o.name = name
@@ -329,13 +330,14 @@ def wheel(tag, x, y, side):
         location=(face, y, z), rotation=(0, math.pi / 2, 0))
     add(bpy.ops.mesh.primitive_torus_add, tag + "Lip", "Rim", major_radius=rim_r * 0.97, minor_radius=0.014,
         location=(face + side * 0.012, y, z), rotation=(0, math.pi / 2, 0))
-    for k in range(10):
-        a = 2 * math.pi * k / 10 + (0.12 if side > 0 else -0.12)
+    # Eight spokes, thick enough to stay a wheel at the Tile's 200 px, not a copy of any production wheel.
+    for k in range(8):
+        a = 2 * math.pi * k / 8 + (0.18 if side > 0 else -0.18)
         sp = add(bpy.ops.mesh.primitive_cube_add, tag + "Spoke%d" % k, "Rim", smooth_=False,
-                 location=(face + side * 0.014, y + math.cos(a) * rim_r * 0.52, z + math.sin(a) * rim_r * 0.52))
-        sp.scale = (0.01, rim_r * 0.47, 0.022)
+                 location=(face + side * 0.014, y + math.cos(a) * rim_r * 0.50, z + math.sin(a) * rim_r * 0.50))
+        sp.scale = (0.011, rim_r * 0.48, 0.032)
         sp.rotation_euler = (a, 0, 0)
-        bv = sp.modifiers.new("Round", "BEVEL"); bv.width, bv.segments = 0.006, 2
+        bv = sp.modifiers.new("Round", "BEVEL"); bv.width, bv.segments = 0.007, 2
     add(bpy.ops.mesh.primitive_cylinder_add, tag + "Hub", "Rim", vertices=48, radius=rim_r * 0.2, depth=0.03,
         location=(face + side * 0.02, y, z), rotation=(0, math.pi / 2, 0))
 
@@ -354,9 +356,12 @@ for side, lr in ((1, "L"), (-1, "R")):
     xm = (max(near) if near else plan_half(ym) * 0.8) + 0.06
     mo = add(bpy.ops.mesh.primitive_uv_sphere_add, "Mirror" + lr, "Paint", segments=32, ring_count=16, radius=1,
              location=(side * (xm + 0.03), ym + 0.02, zm + 0.01))
-    mo.scale = (0.10, 0.06, 0.05)
+    mo.scale = (0.10, 0.055, 0.042)
+    # A dark glass face on the outside, so the mirror reads as a mirror rather than a painted blob.
+    add(bpy.ops.mesh.primitive_cylinder_add, "MirrorFace" + lr, "Glass", vertices=32, radius=0.034, depth=0.006,
+        location=(side * (xm + 0.03) + side * 0.096, ym + 0.025, zm + 0.012), rotation=(0, math.pi / 2, 0))
     arm = add(bpy.ops.mesh.primitive_cube_add, "MirrorArm" + lr, "Trim", smooth_=False,
-              location=(side * (xm - 0.05), ym, zm - 0.015))
+              location=(side * (xm - 0.05), ym, zm - 0.012))
     arm.scale = (0.06, 0.03, 0.012)
     ab = arm.modifiers.new("Round", "BEVEL"); ab.width, ab.segments = 0.008, 2
 

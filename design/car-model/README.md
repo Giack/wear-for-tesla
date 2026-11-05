@@ -14,6 +14,7 @@ Rebuild and render (a new car starts from `tools/car_model/new_scene.py`):
 ```sh
 CAR_DATA=model_3_2024 blender -b design/car-model/model_3.blend --python design/car-model/build_car.py
 blender -b design/car-model/model_3.blend --python android/wear/tools/car_model/render_car.py -- out/ --preview "#B3141C"
+# paint_*.webp / details_*.webp are 400 px wide; preview_*.png is up to 800 px, for checking the composite.
 cp out/paint_*.webp out/details_*.webp android/wear/src/main/assets/cars/model_3/
 ```
 
