@@ -31,8 +31,10 @@ blockout car, useful only to test the pipeline.
 blender -b model_y.blend --python tools/car_model/render_car.py -- out/ --preview "#8C0B14"
 ```
 
-The studio works like a turntable: the HDRI, a high key light and a low frontal fill turn with the camera,
-so every frame is lit alike (the rear is not in shadow just because the lights sit at the front).
+The studio works like a turntable: the HDRI, a key light, a low frontal fill and a far-shoulder rim turn
+with the camera, so every frame is lit alike (the rear is not in shadow just because the lights sit at the front).
+The paint pass uses the same rig at a lower energy. The view transform is Standard, which clips at white,
+so a brighter paint pass would flatten the body to a solid colour once the app multiplies it by the paint.
 
 Per frame (16 by default, frame 00 = front-left three-quarter) Cycles renders three passes:
 
@@ -47,4 +49,6 @@ the details pass, so reflections stay white whatever the paint. All frames share
 size while turning), the floor shadow fades out at the crop's edges, and frames are scaled to 400 px wide
 WebP. `--preview` also writes `preview_NN.png`: what the app shows for that paint colour on black.
 
-Options: `--frames`, `--size` (render px, default 600), `--width` (output px, default 400), `--samples`.
+Options: `--frames`, `--size` (render px, default 960), `--width` (output px, default 400), `--samples` (default 48).
+Frames are rendered larger than the WebP and scaled down, which is the anti-aliasing. `--preview` also writes
+a larger `preview_NN.png` (up to 800 px wide) for docs and for checking the composite.
