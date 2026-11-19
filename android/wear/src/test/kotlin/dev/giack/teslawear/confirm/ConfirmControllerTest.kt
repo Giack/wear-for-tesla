@@ -106,6 +106,7 @@ class ConfirmControllerTest {
         assertEquals(text(R.string.outcome_unreachable), messageFor(RouteOutcome.Unreachable))
         assertEquals(text(R.string.outcome_sign_in_again), messageFor(RouteOutcome.AuthRequired))
         assertEquals(text(R.string.outcome_out_of_range), messageFor(RouteOutcome.OutOfRange))
+        assertEquals(text(R.string.outcome_needs_fleet), messageFor(RouteOutcome.NeedsFleet))
         assertEquals(text(R.string.outcome_error, "not_charging"), messageFor(RouteOutcome.Done(CommandResult.Failed("not_charging"), Channel.BLE)))
     }
 

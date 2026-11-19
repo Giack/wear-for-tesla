@@ -24,6 +24,7 @@ object SnapshotCodec {
         s.setTempC?.let { put("set", JsonPrimitive(it)) }
         s.chargePortOpen?.let { put("port", JsonPrimitive(it)) }
         s.charging?.let { put("charging", JsonPrimitive(it)) }
+        s.sentryOn?.let { put("sentry", JsonPrimitive(it)) }
         s.windowsOpen?.let { put("windows", JsonPrimitive(it)) }
         s.trunkOpen?.let { put("trunk", JsonPrimitive(it)) }
         s.frunkOpen?.let { put("frunk", JsonPrimitive(it)) }
@@ -38,7 +39,8 @@ object SnapshotCodec {
         Snapshot(
             batteryPct = o.int("battery"), rangeKm = o.int("range"), locked = o.bool("locked"),
             climateOn = o.bool("climate"), insideTempC = o.float("inside"), setTempC = o.float("set"),
-            chargePortOpen = o.bool("port"), charging = o.bool("charging"), windowsOpen = o.bool("windows"),
+            chargePortOpen = o.bool("port"), charging = o.bool("charging"), sentryOn = o.bool("sentry"),
+            windowsOpen = o.bool("windows"),
             trunkOpen = o.bool("trunk"), frunkOpen = o.bool("frunk"), asleep = o.bool("asleep"), updatedAtMs = o.getValue("at").jsonPrimitive.long,
             checkedAtMs = o["checked"]?.jsonPrimitive?.longOrNull,
             channel = Channel.valueOf(o.getValue("channel").jsonPrimitive.content),

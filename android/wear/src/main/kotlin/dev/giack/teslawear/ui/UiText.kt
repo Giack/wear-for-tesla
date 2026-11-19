@@ -70,6 +70,11 @@ fun commandText(command: VehicleCommand): UiText = when (command) {
     VehicleCommand.CloseWindows -> text(R.string.command_close_windows)
     VehicleCommand.FlashLights -> text(R.string.command_flash_lights)
     VehicleCommand.Honk -> text(R.string.command_honk)
+    VehicleCommand.SentryOn -> text(R.string.command_sentry_on)
+    VehicleCommand.SentryOff -> text(R.string.command_sentry_off)
+    VehicleCommand.ChargeStart -> text(R.string.command_charge_start)
+    VehicleCommand.ChargeStop -> text(R.string.command_charge_stop)
+    VehicleCommand.UnlatchDriverDoor -> text(R.string.command_unlatch_door)
 }
 
 fun temperatureText(celsius: Float): UiText = text(R.string.temperature, celsius)
@@ -85,6 +90,7 @@ fun outcomeText(outcome: RouteOutcome): UiText? = when (outcome) {
     RouteOutcome.Unreachable -> text(R.string.outcome_unreachable)
     RouteOutcome.AuthRequired -> text(R.string.outcome_sign_in_again)
     RouteOutcome.OutOfRange -> text(R.string.outcome_out_of_range)
+    RouteOutcome.NeedsFleet -> text(R.string.outcome_needs_fleet)
 }
 
 fun resultText(result: CommandResult): UiText? = when (result) {
@@ -104,6 +110,9 @@ fun actionName(action: QuickAction): Int = when (action) {
     QuickAction.WINDOWS -> R.string.action_windows
     QuickAction.LIGHTS -> R.string.action_lights
     QuickAction.HORN -> R.string.action_horn
+    QuickAction.SENTRY -> R.string.action_sentry
+    QuickAction.CHARGING -> R.string.action_charging
+    QuickAction.UNLATCH_DOOR -> R.string.action_door
 }
 
 @StringRes

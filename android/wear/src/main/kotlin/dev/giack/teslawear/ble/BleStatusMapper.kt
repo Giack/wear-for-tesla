@@ -1,6 +1,7 @@
 package dev.giack.teslawear.ble
 
 import com.tesla.generated.carserver.server.CarServer
+import com.tesla.generated.carserver.vehicle.Vehicle
 import com.tesla.generated.vcsec.Vcsec
 import dev.giack.teslawear.core.Channel
 import dev.giack.teslawear.core.Snapshot
@@ -56,11 +57,22 @@ object BleStatusMapper {
             setTempC = if (climate.hasDriverTempSetting()) climate.driverTempSetting else null,
             chargePortOpen = if (charge.hasChargePortDoorOpen()) charge.chargePortDoorOpen else null,
             charging = if (charge.hasChargingState()) charge.chargingState.hasCharging() else null,
+            sentryOn = sentryOn(closures),
             windowsOpen = if (windows.isEmpty()) null else windows.any { it },
             trunkOpen = if (closures.hasDoorOpenTrunkRear()) closures.doorOpenTrunkRear else null,
             frunkOpen = if (closures.hasDoorOpenTrunkFront()) closures.doorOpenTrunkFront else null,
             updatedAtMs = nowMs,
             channel = Channel.BLE,
         )
+    }
+
+    /** Off is sentry disabled. Armed, idle, aware, panic and quiet all mean it is on. */
+    private fun sentryOn(closures: Vehicle.ClosuresState): Boolean? {
+        if (!closures.hasSentryModeState()) return null
+        return when (closures.sentryModeState.typeCase) {
+            Vehicle.ClosuresState.SentryModeState.TypeCase.OFF -> false
+            Vehicle.ClosuresState.SentryModeState.TypeCase.TYPE_NOT_SET -> null
+            else -> true
+        }
     }
 }

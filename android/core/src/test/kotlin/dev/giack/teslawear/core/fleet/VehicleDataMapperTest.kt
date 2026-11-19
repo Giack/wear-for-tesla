@@ -22,6 +22,14 @@ class VehicleDataMapperTest {
         assertEquals(Channel.CLOUD, s.channel)
     }
 
+    @Test fun sentryModeMapsFromVehicleState() {
+        val on = fixture("vehicle_data_online.json").replace("\"locked\":true", "\"locked\":true,\"sentry_mode\":true")
+        val off = fixture("vehicle_data_online.json").replace("\"locked\":true", "\"locked\":true,\"sentry_mode\":false")
+        assertEquals(true, VehicleDataMapper.map(on, nowMs = 0).sentryOn)
+        assertEquals(false, VehicleDataMapper.map(off, nowMs = 0).sentryOn)
+        assertEquals(null, VehicleDataMapper.map(fixture("vehicle_data_online.json"), nowMs = 0).sentryOn)
+    }
+
     @Test fun frunkMapsFromFt() {
         val s = VehicleDataMapper.map(fixture("vehicle_data_open.json").replace("\"ft\":0", "\"ft\":1"), nowMs = 0)
         assertEquals(true, s.frunkOpen)

@@ -62,6 +62,20 @@ class StatusMappingTest {
         assertEquals(true, s.windowsOpen)
         assertEquals(false, s.locked)
         assertEquals(true, s.frunkOpen)
+        assertEquals(null, s.sentryOn)
+    }
+
+    @Test fun sentryStateMapsFromClosures() {
+        fun state(build: Vehicle.ClosuresState.SentryModeState.Builder.() -> Unit) =
+            Vehicle.ClosuresState.newBuilder().setSentryModeState(Vehicle.ClosuresState.SentryModeState.newBuilder().apply(build)).build()
+        val on = CarServer.Response.newBuilder().setVehicleData(
+            Vehicle.VehicleData.newBuilder().setClosuresState(state { setArmed(Common.Void.getDefaultInstance()) }),
+        ).build()
+        val off = CarServer.Response.newBuilder().setVehicleData(
+            Vehicle.VehicleData.newBuilder().setClosuresState(state { setOff(Common.Void.getDefaultInstance()) }),
+        ).build()
+        assertEquals(true, BleStatusMapper.fromCarServer(on, 0)!!.sentryOn)
+        assertEquals(false, BleStatusMapper.fromCarServer(off, 0)!!.sentryOn)
     }
 
     @Test fun carServerWithoutDataIsNull() = assertNull(BleStatusMapper.fromCarServer(CarServer.Response.getDefaultInstance(), 0))

@@ -12,8 +12,8 @@ android {
         minSdk = 33
         targetSdk = 36
         // CI passes the release tag's numbers; local builds keep these.
-        versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 1
-        versionName = providers.gradleProperty("versionName").orNull ?: "0.1"
+        versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 2000
+        versionName = providers.gradleProperty("versionName").orNull ?: "0.2.0"
     }
 
     compileOptions {

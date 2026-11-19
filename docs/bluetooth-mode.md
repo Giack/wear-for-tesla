@@ -57,8 +57,9 @@ You can check the new key on the car's screen under **Controls → Locks**.
 </div>
 
 - The home screen shows lock state, doors, trunk, frunk, battery and climate whenever the car is within Bluetooth range (a few metres to a few tens of metres).
-- Commands work the same way. Hold the button until the ring fills to confirm.
-- When the car is out of range the app says **"Car out of Bluetooth range"**; remote-only features are not offered. For those, see [Fleet mode](fleet-mode.md).
+- Commands work the same way. Hold the button until the ring fills to confirm. That covers lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights and horn.
+- When the car is out of range the app says **"Car out of Bluetooth range"**.
+- **Unlatch driver door** is on the same screen and uses the same hold. The Bluetooth key is a driver key, and the car refuses that command for the role, so the button says it needs [Fleet mode](fleet-mode.md). With Fleet mode on, the command goes through the Fleet API.
 - Add the **Tile** from the watch's tile list, and the **Car battery** or **Car climate** complication from your watch face's editor.
 
 ## Removing the car

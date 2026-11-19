@@ -34,6 +34,7 @@ object VehicleDataMapper {
             setTempC = climate?.double("driver_temp_setting")?.toFloat(),
             chargePortOpen = charge?.bool("charge_port_door_open"),
             charging = charge?.string("charging_state")?.let { it == "Charging" },
+            sentryOn = vehicle?.bool("sentry_mode"),
             windowsOpen = if (windows.isEmpty()) null else windows.any { it != 0 },
             trunkOpen = vehicle?.int("rt")?.let { it != 0 },
             frunkOpen = vehicle?.int("ft")?.let { it != 0 },

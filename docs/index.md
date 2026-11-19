@@ -126,7 +126,7 @@ The watch, the car and its Keycard. No Tesla account and no computer after you i
 
 Remote control through your own Developer app on developer.tesla.com. The project never runs a shared app, so nobody else sits between you and the car, and nobody else pays your usage.
 
-- State and commands from anywhere. Near the car, Bluetooth is still used first
+- State and commands from anywhere. Near the car, Bluetooth is still used first. Unlatching the driver door uses Fleet mode even then, because the Bluetooth key's driver role cannot authorize it
 - The car's real model, paint and wheels replace the ones you picked
 - Tesla bills the Developer app's owner. The in-app budget defaults to $10 a month, the same as Tesla's monthly developer credit, so with the default you should not pay anything
 - You can turn Fleet mode off on the watch and revoke the key on the car
@@ -164,7 +164,7 @@ Add the Tile for battery, range and four commands without opening the app. Watch
 
 ### Climate, closures, charge
 
-Lock and unlock, climate, frunk, trunk, charge port, windows, lights and horn. In Fleet mode the app wakes a sleeping car only to run a command you have confirmed. A state read never wakes it.
+Lock and unlock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn, and unlatch the driver door. Sentry, charging and the other commands go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode, and the watch says so when Fleet mode is off. In Fleet mode the app wakes a sleeping car only to run a command you have confirmed. A state read never wakes it.
 
 </article>
 

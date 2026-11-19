@@ -4,6 +4,7 @@ import com.tesla.generated.carserver.server.CarServer
 import com.tesla.generated.vcsec.Vcsec
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class VehicleCommandTest {
@@ -47,6 +48,44 @@ class VehicleCommandTest {
         assertTrue(action(VehicleCommand.Honk).hasVehicleControlHonkHornAction())
         assertTrue(action(VehicleCommand.FlashLights).hasVehicleControlFlashLightsAction())
         assertEquals(false, action(VehicleCommand.ClimateOff).hvacAutoAction.powerOn)
+    }
+
+    @Test fun sentryOnAndOff() {
+        assertEquals(Domain.INFOTAINMENT, VehicleCommand.SentryOn.domain)
+        assertEquals(Domain.INFOTAINMENT, VehicleCommand.SentryOff.domain)
+        assertEquals(true, action(VehicleCommand.SentryOn).vehicleControlSetSentryModeAction.on)
+        assertEquals(false, action(VehicleCommand.SentryOff).vehicleControlSetSentryModeAction.on)
+        assertTrue(action(VehicleCommand.SentryOn).hasVehicleControlSetSentryModeAction())
+    }
+
+    @Test fun chargeStartAndStop() {
+        assertEquals(Domain.INFOTAINMENT, VehicleCommand.ChargeStart.domain)
+        assertEquals(Domain.INFOTAINMENT, VehicleCommand.ChargeStop.domain)
+        assertTrue(action(VehicleCommand.ChargeStart).chargingStartStopAction.hasStart())
+        assertFalse(action(VehicleCommand.ChargeStart).chargingStartStopAction.hasStop())
+        assertTrue(action(VehicleCommand.ChargeStop).chargingStartStopAction.hasStop())
+        assertFalse(action(VehicleCommand.ChargeStop).chargingStartStopAction.hasStart())
+    }
+
+    @Test fun unlatchDriverDoorOpensTheFrontDriverDoor() {
+        assertEquals(Domain.VCSEC, VehicleCommand.UnlatchDriverDoor.domain)
+        val move = vcsec(VehicleCommand.UnlatchDriverDoor).closureMoveRequest
+        assertEquals(Vcsec.ClosureMoveType_E.CLOSURE_MOVE_TYPE_OPEN, move.frontDriverDoor)
+        assertEquals(Vcsec.ClosureMoveType_E.CLOSURE_MOVE_TYPE_NONE, move.rearTrunk)
+        assertEquals(Vcsec.ClosureMoveType_E.CLOSURE_MOVE_TYPE_NONE, move.frontTrunk)
+    }
+
+    @Test fun driverKeyCannotUnlatchOverBluetooth() {
+        assertFalse(VehicleCommand.UnlatchDriverDoor.authorizedFor(BleKeyRole.DRIVER))
+        assertTrue(VehicleCommand.UnlatchDriverDoor.authorizedFor(BleKeyRole.OWNER))
+        listOf(VehicleCommand.SentryOn, VehicleCommand.SentryOff, VehicleCommand.ChargeStart, VehicleCommand.ChargeStop, VehicleCommand.Lock)
+            .forEach { assertTrue(it.authorizedFor(BleKeyRole.DRIVER), it.toString()) }
+    }
+
+    @Test fun roleRefusalIsThePrivilegesFault() {
+        assertTrue(CommandResult.Failed("MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES").deniedForRole())
+        assertFalse(CommandResult.Failed("not_charging").deniedForRole())
+        assertFalse(CommandResult.Ok.deniedForRole())
     }
 
     @Test fun readsRequestStatusAndData() {

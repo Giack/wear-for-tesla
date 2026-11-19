@@ -4,9 +4,11 @@ import dev.giack.teslawear.core.fleet.AuthRequiredException
 import dev.giack.teslawear.core.fleet.FleetRejectedException
 import dev.giack.teslawear.core.fleet.FleetResult
 import dev.giack.teslawear.core.fleet.VehicleAsleepException
+import dev.giack.teslawear.protocol.BleKeyRole
 import dev.giack.teslawear.protocol.CommandResult
 import dev.giack.teslawear.protocol.TransportUnavailableException
 import dev.giack.teslawear.protocol.VehicleCommand
+import dev.giack.teslawear.protocol.deniedForRole
 import kotlinx.coroutines.delay
 import java.io.IOException
 
@@ -20,6 +22,11 @@ sealed interface RouteOutcome {
     data object AuthRequired : RouteOutcome
     /** Bluetooth mode only: the car is not within Bluetooth range. */
     data object OutOfRange : RouteOutcome
+    /**
+     * The current Bluetooth key's role cannot authorize this command, and Fleet mode is off.
+     * Shown as a clear message rather than a protocol fault or a silent no-op.
+     */
+    data object NeedsFleet : RouteOutcome
 }
 
 /**
@@ -31,15 +38,23 @@ class CommandRouter(
     private val cloud: CloudLink?,
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val sleep: suspend (Long) -> Unit = { delay(it) },
+    /** Role of the key used over Bluetooth. The watch's own key is a driver key. */
+    private val bleRole: BleKeyRole = BleKeyRole.DRIVER,
 ) {
     suspend fun execute(cmd: VehicleCommand, onProgress: (Progress) -> Unit = {}): RouteOutcome {
-        if (ble.isReachable(BLE_PROBE_MS)) {
+        // Bluetooth first, when this key's role can authorize the command. A refusal for role
+        // (or a command the role can never send) goes through Fleet mode instead.
+        var needsFleet = !cmd.authorizedFor(bleRole)
+        if (!needsFleet && ble.isReachable(BLE_PROBE_MS)) {
             try {
-                return RouteOutcome.Done(ble.commands.execute(cmd), Channel.BLE)
+                val result = ble.commands.execute(cmd)
+                if (result.deniedForRole()) needsFleet = true
+                else return RouteOutcome.Done(result, Channel.BLE)
             } catch (_: TransportUnavailableException) {
                 // Link dropped before the command went out: fall back to the cloud.
             }
         }
+        if (needsFleet && cloud == null) return RouteOutcome.NeedsFleet
         val cloud = cloud ?: return RouteOutcome.OutOfRange
         return try {
             when (val ready = ensureAwake(cloud, onProgress)) {

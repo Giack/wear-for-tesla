@@ -16,6 +16,10 @@ class SnapshotAfterCommandTest {
         assertEquals(true, base.afterCommand(VehicleCommand.OpenTrunk, 5, Channel.BLE).trunkOpen)
         assertEquals(true, base.afterCommand(VehicleCommand.OpenFrunk, 5, Channel.BLE).frunkOpen)
         assertEquals(21.5f, base.afterCommand(VehicleCommand.SetTemp(21.5f), 5, Channel.BLE).setTempC)
+        assertEquals(true, base.afterCommand(VehicleCommand.SentryOn, 5, Channel.BLE).sentryOn)
+        assertEquals(false, base.copy(sentryOn = true).afterCommand(VehicleCommand.SentryOff, 5, Channel.BLE).sentryOn)
+        assertEquals(true, base.afterCommand(VehicleCommand.ChargeStart, 5, Channel.BLE).charging)
+        assertEquals(false, base.copy(charging = true).afterCommand(VehicleCommand.ChargeStop, 5, Channel.BLE).charging)
     }
 
     @Test fun keepsOtherFieldsAndStampsTime() {
@@ -25,6 +29,8 @@ class SnapshotAfterCommandTest {
         assertEquals(Channel.BLE, s.channel)
     }
 
-    @Test fun commandsWithoutStateLeaveSnapshotUnchanged() =
+    @Test fun commandsWithoutStateLeaveSnapshotUnchanged() {
         assertEquals(base, base.afterCommand(VehicleCommand.Honk, 99, Channel.BLE))
+        assertEquals(base, base.afterCommand(VehicleCommand.UnlatchDriverDoor, 99, Channel.BLE))
+    }
 }
