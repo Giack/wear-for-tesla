@@ -32,6 +32,7 @@ Wear for Tesla shows your car's state and sends commands from a watch: over Blue
 <div class="cta" markdown>
 
 [Download the latest APK](https://github.com/Giack/wear-for-tesla/releases/latest){ .md-button .md-button--primary }
+[Add to Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Giack/wear-for-tesla){ .md-button }
 [Quick setup guide](install.md){ .md-button }
 [Source on GitHub](https://github.com/Giack/wear-for-tesla){ .md-button }
 
@@ -175,7 +176,7 @@ Lock and unlock, climate, frunk, trunk, charge port, windows, lights and horn. I
 
 <div class="step" markdown>
 
-**1 · Install the app.** Download the APK from the latest release and sideload it onto a Wear OS 4 or later watch. [Install guide](install.md).
+**1 · Install the app.** Download the latest APK, or track releases with Obtainium on your phone, then sideload it onto a Wear OS 4 or later watch. [Install guide](install.md).
 
 </div>
 

@@ -11,6 +11,10 @@ A free, open-source Wear OS app that shows your Tesla's state and sends it comma
 
 > **Not affiliated with Tesla, Inc. or Google LLC.** This is an independent project. Tesla, Model 3 and Model Y are trademarks of Tesla, Inc. Wear OS is a trademark of Google LLC. [Disclaimer](https://giack.github.io/wear-for-tesla/disclaimer/).
 
+**[Download the latest APK](https://github.com/Giack/wear-for-tesla/releases/latest)** · [Install guide](https://giack.github.io/wear-for-tesla/install/) · [Add to Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Giack/wear-for-tesla)
+
+The download is the signed Wear OS package from the latest GitHub Release (`wear-for-tesla-<version>.apk`). Obtainium, on an Android phone, tracks that release so you hear about updates; it does not put the app on the watch. The [install guide](https://giack.github.io/wear-for-tesla/install/) is the three steps for a Galaxy Watch or a Pixel Watch.
+
 ## On the watch
 
 <table>
@@ -79,7 +83,11 @@ Design notes and decision records are in `design/`. Vocabulary for the project i
 
 ## Contributing
 
-Pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md) first. Changes reach `main` only through reviewed pull requests. Report security problems privately ([SECURITY.md](SECURITY.md)).
+Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it is the short path for a new language (`values-xx/strings.xml`) and for a new car model (the project's own pipeline only; Tesla assets are forbidden).
+
+Looking for somewhere to start? Browse the [good first issues](https://github.com/Giack/wear-for-tesla/labels/good%20first%20issue).
+
+Changes reach `main` only through reviewed pull requests. Report security problems privately ([SECURITY.md](SECURITY.md)).
 
 ## Privacy and licence
 
