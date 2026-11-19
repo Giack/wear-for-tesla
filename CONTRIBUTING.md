@@ -4,7 +4,7 @@ Thanks for helping. This is a small spare-time project that controls real cars, 
 
 ## Before you start
 
-- **Open an issue first** for anything bigger than a typo or an obvious bug fix, and say you would like to work on it. Agreeing on the approach before the code saves both of us time.
+- **Open an issue first** for anything bigger than a typo or an obvious bug fix, and say you would like to work on it. Agreeing on the approach before the code saves both of us time. The [good first issues](https://github.com/Giack/wear-for-tesla/labels/good%20first%20issue) are the easiest place to start.
 - Bug reports and feature requests use the issue forms. **Never post your VIN, keys, tokens or an unedited Bluetooth log.**
 - Security problems are reported privately: see [SECURITY.md](SECURITY.md).
 

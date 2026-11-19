@@ -4,6 +4,12 @@
 .screens img { width: 150px; height: 150px; border-radius: 50%; box-shadow: 0 0 0 6px #2b2b2e; }
 .screens figcaption { font-size: .75rem; color: var(--md-default-fg-color--light); margin-top: .6rem; }
 
+/* Install guide: the same round captures, a little larger so the menu text can be read. */
+.install-shots { display: flex; flex-wrap: wrap; gap: 1.25rem 1rem; justify-content: center; margin: 1.25rem 0; }
+.install-shots figure { margin: 0; text-align: center; flex: 1 1 160px; max-width: 220px; }
+.install-shots img { width: 180px; height: 180px; border-radius: 50%; box-shadow: 0 0 0 6px #2b2b2e; }
+.install-shots figcaption { font-size: .75rem; color: var(--md-default-fg-color--light); margin-top: .55rem; }
+
 /* Landing page ----------------------------------------------------------- */
 .landing { --landing-line: color-mix(in srgb, var(--md-default-fg-color) 14%, transparent); }
 

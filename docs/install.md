@@ -31,7 +31,7 @@ On the [latest release](https://github.com/Giack/wear-for-tesla/releases/latest)
 
 The watch and the computer or phone must be on the **same Wi-Fi**. Many guest and office networks block devices from seeing each other; a home network or a phone hotspot is the reliable choice.
 
-Developer options and the two debugging switches are the same idea on every Wear OS watch. The menu names are not. There is no screenshot of these screens here: the settings UI belongs to Samsung or Google, and a stand-in picture would not be the real menus.
+Developer options and the two debugging switches are the same idea on every Wear OS watch. The menu names are not. The pictures are the stock Wear OS emulator: a round watch running Wear OS 5 (API 34), with the same labels as a Pixel Watch. The IP address and the pairing code on a real watch will not match the pictures. A Galaxy Watch uses the same screens, but you unlock developer options under **Settings → About watch → Software** (tap **Software version**), not under **System → About → Versions**.
 
 !!! info "If a label has moved"
     Match the section for your watch. You are looking for the version row that unlocks developer options, then **ADB debugging** and **Wireless debugging**. [Google's wireless debugging steps](https://developer.android.com/training/wearables/get-started/debug-wifi) are the common half, after the watch-specific unlock below.
@@ -54,6 +54,35 @@ Google documents the unlock on the [developer options](https://developer.android
 3. Go back to **Settings** and open **Developer options** (on Wear OS 6 it is **Settings → Developer options**). Turn on **ADB debugging**, then **Wireless debugging**.
 4. When the watch asks to allow debugging on this network, allow it.
 
+<div class="install-shots" markdown>
+
+<figure markdown="span">
+![Versions: Build number on the Wear OS emulator](assets/install/versions.webp)
+<figcaption>System → About → Versions. Tap Build number seven times.</figcaption>
+</figure>
+
+<figure markdown="span">
+![Developer options with ADB debugging on and Wireless debugging](assets/install/developer-options.webp)
+<figcaption>ADB debugging on. Wireless debugging is the next row.</figcaption>
+</figure>
+
+<figure markdown="span">
+![Pair with device: Wi-Fi pairing code, IP address and port](assets/install/pair-device.webp)
+<figcaption>Pair new device: the code, and the pairing IP and port.</figcaption>
+</figure>
+
+<figure markdown="span">
+![Recents list with Wear for Tesla](assets/install/app-list.webp)
+<figcaption>Wear for Tesla in the app list, after install.</figcaption>
+</figure>
+
+<figure markdown="span">
+![Welcome, the first screen of Wear for Tesla](assets/install/onboarding.webp)
+<figcaption>The first screen: Welcome.</figcaption>
+</figure>
+
+</div>
+
 ## 3. Install it on the watch
 
 Pairing is once per computer or phone. Connecting is every time **Wireless debugging** was turned off, and the port often changes. Keeping the watch on its charger stops it dropping Wi-Fi mid-install.
@@ -62,7 +91,7 @@ Pairing is once per computer or phone. Connecting is every time **Wireless debug
 
 Install `adb` from the [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) (version 30 or newer, which is what wireless pairing needs).
 
-1. On the watch, open **Wireless debugging** and tap **Pair new device**. Note the IP address, the **pairing** port and the pairing code. The connection port shown on the Wireless debugging screen is a different port; note that too.
+1. On the watch, open **Wireless debugging** and tap **Pair new device**. It looks like the pairing picture above: a Wi-Fi pairing code, an IP address and a **pairing** port. The connection port on the Wireless debugging screen itself is a different port; note that too.
 2. Pair, then connect:
 
     ```sh
@@ -85,7 +114,7 @@ A phone app that speaks wireless debugging can push the APK. *Wear Installer 2* 
 
 ### Open the app
 
-Find **Wear for Tesla** in the watch's app list and follow [Bluetooth mode setup](bluetooth-mode.md). When pairing with the car is done you can turn **ADB debugging** and **Wireless debugging** off. They are only needed to install.
+Find **Wear for Tesla** in the watch's app list. The first screen is Welcome, as in the pictures above. Then follow [Bluetooth mode setup](bluetooth-mode.md). When pairing with the car is done you can turn **ADB debugging** and **Wireless debugging** off. They are only needed to install.
 
 ## Build it yourself
 
