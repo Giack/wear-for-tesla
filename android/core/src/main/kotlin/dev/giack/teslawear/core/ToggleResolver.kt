@@ -15,6 +15,9 @@ object ToggleResolver {
             QuickAction.WINDOWS -> if (s?.windowsOpen == true) VehicleCommand.CloseWindows else VehicleCommand.VentWindows
             QuickAction.LIGHTS -> VehicleCommand.FlashLights
             QuickAction.HORN -> VehicleCommand.Honk
+            QuickAction.SENTRY -> if (s?.sentryOn == true) VehicleCommand.SentryOff else VehicleCommand.SentryOn
+            QuickAction.CHARGING -> if (s?.charging == true) VehicleCommand.ChargeStop else VehicleCommand.ChargeStart
+            QuickAction.UNLATCH_DOOR -> VehicleCommand.UnlatchDriverDoor
         }
         return ResolvedAction(command, s?.let { Age.of(it.updatedAtMs, nowMs) })
     }

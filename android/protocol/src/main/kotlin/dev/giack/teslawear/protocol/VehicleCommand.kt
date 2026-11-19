@@ -4,10 +4,27 @@ import com.tesla.generated.carserver.common.Common
 import com.tesla.generated.carserver.server.CarServer
 import com.tesla.generated.vcsec.Vcsec
 
+/**
+ * Role of the key that signs Bluetooth commands. The watch enrolls its BLE key as [DRIVER].
+ * A Fleet Manager key cannot send commands over Bluetooth at all (it is only used through the Fleet API).
+ */
+enum class BleKeyRole { DRIVER, OWNER }
+
 /** Commands the app can send; payloads mirror vehicle-command's pkg/vehicle implementations. */
 sealed interface VehicleCommand {
     val domain: Domain
     fun payload(): ByteArray
+
+    /**
+     * Whether [role] may authorize this command over Bluetooth.
+     * A driver key can run the commands a phone key can (locks, climate, sentry, charging, and the rest).
+     * Remote door unlatch is refused for that role (`MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES`);
+     * an owner key can send it over Bluetooth, and Fleet mode sends it with the cloud key.
+     */
+    fun authorizedFor(role: BleKeyRole): Boolean = when (this) {
+        UnlatchDriverDoor -> role == BleKeyRole.OWNER
+        else -> true
+    }
 
     sealed class Rke(private val action: Vcsec.RKEAction_E) : VehicleCommand {
         override val domain get() = Domain.VCSEC
@@ -100,7 +117,46 @@ sealed interface VehicleCommand {
             builder.setVehicleControlHonkHornAction(CarServer.VehicleControlHonkHornAction.getDefaultInstance())
         }
     }
+
+    data object SentryOn : Infotainment() {
+        override fun action(builder: CarServer.VehicleAction.Builder) {
+            builder.setVehicleControlSetSentryModeAction(
+                CarServer.VehicleControlSetSentryModeAction.newBuilder().setOn(true),
+            )
+        }
+    }
+
+    data object SentryOff : Infotainment() {
+        override fun action(builder: CarServer.VehicleAction.Builder) {
+            builder.setVehicleControlSetSentryModeAction(
+                CarServer.VehicleControlSetSentryModeAction.newBuilder().setOn(false),
+            )
+        }
+    }
+
+    data object ChargeStart : Infotainment() {
+        override fun action(builder: CarServer.VehicleAction.Builder) {
+            builder.setChargingStartStopAction(
+                CarServer.ChargingStartStopAction.newBuilder().setStart(Common.Void.getDefaultInstance()),
+            )
+        }
+    }
+
+    data object ChargeStop : Infotainment() {
+        override fun action(builder: CarServer.VehicleAction.Builder) {
+            builder.setChargingStartStopAction(
+                CarServer.ChargingStartStopAction.newBuilder().setStop(Common.Void.getDefaultInstance()),
+            )
+        }
+    }
+
+    /** VCSEC closure move on the front driver door. A driver-role BLE key cannot authorize it. */
+    data object UnlatchDriverDoor : Closure({ frontDriverDoor = Vcsec.ClosureMoveType_E.CLOSURE_MOVE_TYPE_OPEN })
 }
+
+/** The car refused the command because of the key's role (`MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES`). */
+fun CommandResult.deniedForRole(): Boolean =
+    this is CommandResult.Failed && "INSUFFICIENT_PRIVILEGES" in reason
 
 /** Read requests used for status refreshes. */
 object VehicleReads {

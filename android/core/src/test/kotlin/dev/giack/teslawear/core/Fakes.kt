@@ -53,6 +53,8 @@ class MemorySnapshots(var snapshot: Snapshot? = null) : SnapshotRepository {
 
 fun snap(
     locked: Boolean? = null, climateOn: Boolean? = null, chargePortOpen: Boolean? = null, windowsOpen: Boolean? = null,
-    trunkOpen: Boolean? = null, batteryPct: Int? = null, updatedAtMs: Long = 0, channel: Channel = Channel.CLOUD,
+    trunkOpen: Boolean? = null, batteryPct: Int? = null, charging: Boolean? = null, sentryOn: Boolean? = null,
+    updatedAtMs: Long = 0, channel: Channel = Channel.CLOUD,
 ) = Snapshot(batteryPct = batteryPct, locked = locked, climateOn = climateOn, chargePortOpen = chargePortOpen,
-    windowsOpen = windowsOpen, trunkOpen = trunkOpen, updatedAtMs = updatedAtMs, channel = channel)
+    windowsOpen = windowsOpen, trunkOpen = trunkOpen, charging = charging, sentryOn = sentryOn,
+    updatedAtMs = updatedAtMs, channel = channel)

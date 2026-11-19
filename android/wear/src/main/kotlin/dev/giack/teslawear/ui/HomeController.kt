@@ -32,6 +32,8 @@ data class HomeUi(
     val messageIsError: Boolean = false,
     val pendingTemp: Float? = null,
     val authRequired: Boolean = false,
+    /** False in Bluetooth mode, where a role-limited command has to say that it needs Fleet mode. */
+    val fleetMode: Boolean = false,
 )
 
 /** Fleet API spending this month against the user's budget. */
@@ -125,12 +127,14 @@ class HomeController(
             },
             usageText = u?.let { text(R.string.home_usage, it.usd, it.budgetUsd) },
             usageTone = u?.level ?: BudgetLevel.OK,
+            fleetMode = u != null,
         )
     }
 
     private fun statusLine(s: Snapshot?): UiText? = listOfNotNull(
         when (s?.locked) { true -> R.string.status_locked; false -> R.string.status_unlocked; null -> null },
         if (s?.charging == true) R.string.status_charging else null,
+        if (s?.sentryOn == true) R.string.status_sentry else null,
         if (s?.climateOn == true) R.string.status_climate_on else null,
     ).map { text(it) }.takeIf { it.isNotEmpty() }?.let { UiText.Joined(it, " · ") }
 

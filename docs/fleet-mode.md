@@ -6,7 +6,8 @@ Set up [Bluetooth mode](bluetooth-mode.md) first: Fleet mode adds to it, it does
 
 ## What changes
 
-- State and commands work from anywhere. When the car is near, commands still go over Bluetooth, which is faster and free.
+- State and commands work from anywhere. When the car is near, commands still go over Bluetooth, which is faster and free. Sentry and start/stop charging are among them.
+- Unlatching the driver door always uses the Fleet API, even next to the car. The Bluetooth key has the driver role, and the car answers `MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES` for that command. With Fleet mode off, the watch says the command needs Fleet mode.
 - The app learns the car's real model, paint and wheels, replacing what you picked.
 - The app finds your Fleet API region (North America, Europe, …) after you sign in.
 - The app wakes a sleeping car **only to run a command you confirmed**, never just to read its state.

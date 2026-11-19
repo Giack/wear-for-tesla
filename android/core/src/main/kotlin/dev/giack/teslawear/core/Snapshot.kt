@@ -15,6 +15,8 @@ data class Snapshot(
     val setTempC: Float? = null,
     val chargePortOpen: Boolean? = null,
     val charging: Boolean? = null,
+    /** Sentry mode is armed (any state other than off). Null when the car has not reported it. */
+    val sentryOn: Boolean? = null,
     val windowsOpen: Boolean? = null,
     val trunkOpen: Boolean? = null,
     val frunkOpen: Boolean? = null,
@@ -37,6 +39,7 @@ data class Snapshot(
         setTempC = newer.setTempC ?: setTempC,
         chargePortOpen = newer.chargePortOpen ?: chargePortOpen,
         charging = newer.charging ?: charging,
+        sentryOn = newer.sentryOn ?: sentryOn,
         windowsOpen = newer.windowsOpen ?: windowsOpen,
         trunkOpen = newer.trunkOpen ?: trunkOpen,
         frunkOpen = newer.frunkOpen ?: frunkOpen,
@@ -64,6 +67,10 @@ fun Snapshot.afterCommand(cmd: VehicleCommand, nowMs: Long, channel: Channel): S
         VehicleCommand.OpenTrunk -> copy(trunkOpen = true)
         VehicleCommand.CloseTrunk -> copy(trunkOpen = false)
         VehicleCommand.OpenFrunk -> copy(frunkOpen = true)
+        VehicleCommand.SentryOn -> copy(sentryOn = true)
+        VehicleCommand.SentryOff -> copy(sentryOn = false)
+        VehicleCommand.ChargeStart -> copy(charging = true)
+        VehicleCommand.ChargeStop -> copy(charging = false)
         is VehicleCommand.SetTemp -> copy(setTempC = cmd.celsius)
         else -> return this
     }

@@ -8,6 +8,10 @@
     <string name="action_windows">Finestrini</string>
     <string name="action_lights">Luci</string>
     <string name="action_horn">Clacson</string>
+    <string name="action_sentry">Sentinella</string>
+    <string name="action_charging">Carica</string>
+    <string name="action_door">Porta</string>
+    <string name="door_needs_fleet">Sganciare la porta richiede la modalità Fleet</string>
 
     <string name="command_lock">Blocca</string>
     <string name="command_unlock">Sblocca</string>
@@ -23,6 +27,11 @@
     <string name="command_close_windows">Chiudi finestrini</string>
     <string name="command_flash_lights">Lampeggia luci</string>
     <string name="command_honk">Suona clacson</string>
+    <string name="command_sentry_on">Attiva la sentinella</string>
+    <string name="command_sentry_off">Disattiva la sentinella</string>
+    <string name="command_charge_start">Avvia la ricarica</string>
+    <string name="command_charge_stop">Interrompi la ricarica</string>
+    <string name="command_unlatch_door">Sgancia la porta guidatore</string>
     <string name="command_wake">Sveglia l\'auto</string>
     <string name="hold_to_confirm_description">%1$s, tieni premuto</string>
 
@@ -41,6 +50,7 @@
     <string name="outcome_unreachable">Auto non raggiungibile</string>
     <string name="outcome_sign_in_again">Accedi di nuovo</string>
     <string name="outcome_out_of_range">Auto fuori portata Bluetooth</string>
+    <string name="outcome_needs_fleet">Questo comando richiede la modalità Fleet</string>
 
     <string name="home_refresh">↻ Aggiorna</string>
     <string name="home_refreshing">Aggiorno… se dorme la sveglio</string>
@@ -53,6 +63,7 @@
     <string name="status_unlocked">APERTA</string>
     <string name="status_charging">IN CARICA</string>
     <string name="status_climate_on">CLIMA ACCESO</string>
+    <string name="status_sentry">SENTINELLA</string>
     <string name="car_image_description">La tua auto</string>
     <string name="climate_title">CLIMA</string>
     <string name="climate_title_on">CLIMA · ACCESO</string>

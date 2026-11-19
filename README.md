@@ -27,7 +27,7 @@ The download is the signed Wear OS package from the latest GitHub Release (`wear
   </tr>
 </table>
 
-Lock, climate, frunk, trunk, charge port, windows, lights and horn. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. The app never wakes the car just to read it.
+Lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn and unlatch the driver door. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. Sentry and charging go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode: the Bluetooth key is a driver key, and the car refuses that command for the role. The app never wakes the car just to read it.
 
 ## Why the watch has its own BLE key
 

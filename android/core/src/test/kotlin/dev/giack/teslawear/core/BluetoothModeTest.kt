@@ -23,6 +23,19 @@ class BluetoothModeTest {
         assertEquals(RouteOutcome.OutOfRange, CommandRouter(FakeBle(reachable = false), cloud = null).execute(VehicleCommand.Lock))
     }
 
+    @Test fun sentryAndChargingStayOnBluetooth() = runTest {
+        val ble = FakeBle(reachable = true)
+        val router = CommandRouter(ble, cloud = null)
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.BLE), router.execute(VehicleCommand.SentryOn))
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.BLE), router.execute(VehicleCommand.ChargeStop))
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.SentryOn, VehicleCommand.ChargeStop), ble.runner.executed)
+    }
+
+    @Test fun doorUnlatchInBluetoothModeAsksForFleet() = runTest {
+        assertEquals(RouteOutcome.NeedsFleet, CommandRouter(FakeBle(reachable = true), cloud = null).execute(VehicleCommand.UnlatchDriverDoor))
+        assertEquals(RouteOutcome.NeedsFleet, CommandRouter(FakeBle(reachable = false), cloud = null).execute(VehicleCommand.UnlatchDriverDoor))
+    }
+
     @Test fun droppedBluetoothLinkIsReportedAsOutOfRange() = runTest {
         val ble = FakeBle(reachable = true).apply { runner.result = { throw TransportUnavailableException("gatt") } }
         assertEquals(RouteOutcome.OutOfRange, CommandRouter(ble, cloud = null).execute(VehicleCommand.Lock))

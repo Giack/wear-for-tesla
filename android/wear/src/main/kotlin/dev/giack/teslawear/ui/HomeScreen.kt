@@ -133,6 +133,15 @@ fun HomeScreen(vm: HomeViewModel, onOpenSetup: () -> Unit) {
             item { ClimateSection(s, ui.pendingTemp, ui.busy, vm) }
             item { ActionGrid(listOf(QuickAction.CHARGE_PORT, QuickAction.WINDOWS), s, ui.busy, vm, ::label) }
             item { ActionGrid(listOf(QuickAction.LIGHTS, QuickAction.HORN), s, ui.busy, vm, ::label) }
+            item { ActionGrid(listOf(QuickAction.SENTRY, QuickAction.CHARGING, QuickAction.UNLATCH_DOOR), s, ui.busy, vm, ::label) }
+            if (!ui.fleetMode) {
+                item {
+                    Text(
+                        stringResource(R.string.door_needs_fleet), fontSize = 10.sp, color = TeslaColors.Amber,
+                        textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(0.84f).padding(top = 2.dp),
+                    )
+                }
+            }
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 8.dp)) {
                     s?.let { Text(stringResource(if (it.channel == Channel.BLE) R.string.channel_ble else R.string.channel_cloud), fontSize = 9.sp,
@@ -191,7 +200,11 @@ private fun activeFor(a: QuickAction, s: dev.giack.teslawear.core.Snapshot?): Bo
     QuickAction.TRUNK -> s?.trunkOpen == true
     QuickAction.FRUNK -> s?.frunkOpen == true
     QuickAction.WINDOWS -> s?.windowsOpen == true
-    else -> false
+    QuickAction.LIGHTS -> false
+    QuickAction.HORN -> false
+    QuickAction.SENTRY -> s?.sentryOn == true
+    QuickAction.CHARGING -> s?.charging == true
+    QuickAction.UNLATCH_DOOR -> false
 }
 
 /** Cabin temperature and climate state from the car, plus the set point with ‹ › to change it. */

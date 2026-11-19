@@ -31,6 +31,14 @@ class ToggleResolverTest {
         assertEquals(ResolvedAction(VehicleCommand.OpenFrunk, Age.Now), r(QuickAction.FRUNK, on))
         assertEquals(ResolvedAction(VehicleCommand.FlashLights, Age.Now), r(QuickAction.LIGHTS, on))
         assertEquals(ResolvedAction(VehicleCommand.Honk, Age.Now), r(QuickAction.HORN, on))
+        val armed = snap(sentryOn = true, charging = true, updatedAtMs = now)
+        val idle = snap(sentryOn = false, charging = false, updatedAtMs = now)
+        assertEquals(ResolvedAction(VehicleCommand.SentryOff, Age.Now), r(QuickAction.SENTRY, armed))
+        assertEquals(ResolvedAction(VehicleCommand.SentryOn, Age.Now), r(QuickAction.SENTRY, idle))
+        assertEquals(ResolvedAction(VehicleCommand.SentryOn, null), r(QuickAction.SENTRY, null))
+        assertEquals(ResolvedAction(VehicleCommand.ChargeStop, Age.Now), r(QuickAction.CHARGING, armed))
+        assertEquals(ResolvedAction(VehicleCommand.ChargeStart, Age.Now), r(QuickAction.CHARGING, idle))
+        assertEquals(ResolvedAction(VehicleCommand.UnlatchDriverDoor, Age.Now), r(QuickAction.UNLATCH_DOOR, armed))
     }
 
     @Test fun ages() {

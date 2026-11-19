@@ -16,4 +16,7 @@ fun iconFor(action: QuickAction, snapshot: Snapshot? = null): Int = when (action
     QuickAction.WINDOWS -> R.drawable.ic_vent
     QuickAction.LIGHTS -> R.drawable.ic_light
     QuickAction.HORN -> R.drawable.ic_horn
+    QuickAction.SENTRY -> R.drawable.ic_sentry
+    QuickAction.CHARGING -> R.drawable.ic_battery
+    QuickAction.UNLATCH_DOOR -> R.drawable.ic_door
 }

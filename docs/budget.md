@@ -26,7 +26,7 @@ Tap **Settings → API budget** to cycle through $2, $5, $10, $20 and $50 a mont
 
 - Cloud state reads stop until the next month. The home screen keeps the last known state and shows how old it is.
 - Bluetooth keeps working as usual, for state and commands.
-- Commands you confirm still go through the Fleet API when the car is out of Bluetooth range.
+- Commands you confirm still go through the Fleet API when the car is out of Bluetooth range. Unlatching the driver door always does, even when the car is near, because the Bluetooth key cannot authorize it.
 
 ## Background check
 

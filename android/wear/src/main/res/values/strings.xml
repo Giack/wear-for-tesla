@@ -18,6 +18,10 @@
     <string name="action_windows">Windows</string>
     <string name="action_lights">Lights</string>
     <string name="action_horn">Horn</string>
+    <string name="action_sentry">Sentry</string>
+    <string name="action_charging">Charge</string>
+    <string name="action_door">Door</string>
+    <string name="door_needs_fleet">Unlatching the door needs Fleet mode</string>
 
     <!-- The exact command, as shown on the confirmation -->
     <string name="command_lock">Lock</string>
@@ -34,6 +38,11 @@
     <string name="command_close_windows">Close windows</string>
     <string name="command_flash_lights">Flash lights</string>
     <string name="command_honk">Honk horn</string>
+    <string name="command_sentry_on">Turn sentry on</string>
+    <string name="command_sentry_off">Turn sentry off</string>
+    <string name="command_charge_start">Start charging</string>
+    <string name="command_charge_stop">Stop charging</string>
+    <string name="command_unlatch_door">Unlatch driver door</string>
     <string name="command_wake">Wake the car</string>
     <string name="hold_to_confirm_description">%1$s, hold to confirm</string>
 
@@ -54,6 +63,7 @@
     <string name="outcome_unreachable">Car unreachable</string>
     <string name="outcome_sign_in_again">Sign in again</string>
     <string name="outcome_out_of_range">Car out of Bluetooth range</string>
+    <string name="outcome_needs_fleet">This command needs Fleet mode</string>
 
     <!-- Home -->
     <string name="home_refresh">↻ Refresh</string>
@@ -67,6 +77,7 @@
     <string name="status_unlocked">UNLOCKED</string>
     <string name="status_charging">CHARGING</string>
     <string name="status_climate_on">CLIMATE ON</string>
+    <string name="status_sentry">SENTRY</string>
     <string name="car_image_description">Your car</string>
     <string name="climate_title">CLIMATE</string>
     <string name="climate_title_on">CLIMATE · ON</string>
