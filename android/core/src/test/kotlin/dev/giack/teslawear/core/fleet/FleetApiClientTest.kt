@@ -91,6 +91,15 @@ class FleetApiClientTest {
         server.enqueue(MockResponse().setBody("""{"response":{"vin":"$vin","state":"asleep"}}"""))
         assertEquals(FleetResult.Ok("asleep"), client.vehicleState(vin))
         assertEquals("/api/1/vehicles/$vin", server.takeRequest().path)
+        assertEquals(1, meter.counts().data)
+    }
+
+    @Test fun vehicleState408IsAsleepAndCounted() = runTest {
+        server.enqueue(MockResponse().setResponseCode(408).setBody("""{"error":"vehicle unavailable"}"""))
+        assertEquals(FleetResult.Asleep, client.vehicleState(vin))
+        assertEquals(1, meter.counts().data)
+        assertEquals(0, meter.counts().commands)
+        assertEquals(0, meter.counts().wakes)
     }
 
     @Test fun wakeUpCountsAsWake() = runTest {

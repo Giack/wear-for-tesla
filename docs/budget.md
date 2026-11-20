@@ -12,7 +12,9 @@ The app keeps a count of its own Fleet API calls for the current calendar month 
 |---|---|
 | State read | $0.002 |
 | Command | $0.001 |
-| Waking the car | $0.02 |
+| Waking the car (`wake_up`) | $0.02 |
+
+A command that has to wake the car counts the Fleet `wake_up` and each `state` check while it waits. A wake done over Bluetooth is free and is not counted. The command itself is counted once per time it is actually sent.
 
 The estimate is the app's own count, not Tesla's invoice: check your real usage on developer.tesla.com.
 

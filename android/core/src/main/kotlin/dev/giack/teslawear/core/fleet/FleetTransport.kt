@@ -27,6 +27,9 @@ class FleetTransport(private val client: FleetApiClient, private val vin: String
         }
         return when (result) {
             is FleetResult.Ok -> RoutableMessage.parseFrom(result.value)
+            // 408: the vehicle was not online, so Tesla did not run the command (Fleet API conventions).
+            // The router wakes and retries once. A client-side timeout stays TransportTimeoutException:
+            // that one may have been executed, and must not be sent again.
             FleetResult.Asleep -> throw VehicleAsleepException()
             // A 5xx may follow Tesla forwarding the command, so the car may have executed it.
             is FleetResult.Error ->

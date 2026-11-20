@@ -68,7 +68,7 @@ class HomeController(
         _ui.value = _ui.value.copy(busy = false, authRequired = false)
     }
 
-    /** "Refresh": the one refresh allowed to wake the car (over Fleet API, ~30 s). */
+    /** "Refresh": the one refresh allowed to wake the car (over Fleet API, up to ~45 s). */
     suspend fun refreshNow() {
         val before = snapshot()
         _ui.value = _ui.value.copy(busy = true, message = text(R.string.home_refreshing), messageIsError = false)

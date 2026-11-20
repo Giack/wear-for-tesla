@@ -11,10 +11,23 @@ class FakeRunner(var result: () -> CommandResult = { CommandResult.Ok }) : Comma
     override suspend fun execute(cmd: VehicleCommand): CommandResult { executed += cmd; return result() }
 }
 
-class FakeBle(var reachable: Boolean = false, var status: Snapshot? = null, var known: Snapshot? = null) : BleLink {
+class FakeBle(
+    var reachable: Boolean = false,
+    var status: Snapshot? = null,
+    var known: Snapshot? = null,
+    /** When true, [wakeIfNear] sends [VehicleCommand.WakeVehicle] and reports success. */
+    var canWakeOverBle: Boolean = false,
+) : BleLink {
     val runner = FakeRunner()
     var probes = 0
+    var bleWakes = 0
     override suspend fun isReachable(timeoutMs: Long): Boolean { probes++; return reachable }
+    override suspend fun wakeIfNear(): Boolean {
+        if (!canWakeOverBle) return false
+        bleWakes++
+        runner.execute(VehicleCommand.WakeVehicle)
+        return true
+    }
     override val commands: CommandRunner get() = runner
     override suspend fun readStatus(): Snapshot? = status
     override suspend fun readKnownCarStatus(): Snapshot? = known
@@ -24,10 +37,18 @@ class FakeApi : VehicleApi {
     var states = ArrayDeque<FleetResult<String>>()
     var data: FleetResult<Snapshot> = FleetResult.Asleep
     var dataCalls = 0
+    var stateReads = 0
     var wakes = 0
     var failWith: Exception? = null
+    /** Thrown from the next [vehicleState] calls, one each, without failing the rest. */
+    var stateFailures = ArrayDeque<Exception>()
+    /** Thrown from [wakeUp] after the call is counted (a timed-out wake is still a wake). */
+    var wakeFailure: Exception? = null
+    var wakeResult: FleetResult<Unit> = FleetResult.Ok(Unit)
     override suspend fun vehicleState(vin: String): FleetResult<String> {
+        stateReads++
         failWith?.let { throw it }
+        stateFailures.removeFirstOrNull()?.let { throw it }
         return if (states.size > 1) states.removeFirst() else states.first()
     }
     /** What vehicleData answers once the car has been woken (null: same as [data]). */
@@ -37,7 +58,11 @@ class FakeApi : VehicleApi {
         dataCalls++
         return dataAfterWake?.takeIf { wakes > 0 } ?: data
     }
-    override suspend fun wakeUp(vin: String): FleetResult<Unit> { wakes++; return FleetResult.Ok(Unit) }
+    override suspend fun wakeUp(vin: String): FleetResult<Unit> {
+        wakes++
+        wakeFailure?.let { throw it }
+        return wakeResult
+    }
 }
 
 class FakeCloud(override val api: FakeApi = FakeApi()) : CloudLink {

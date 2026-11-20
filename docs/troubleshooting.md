@@ -37,9 +37,16 @@ The car is too far for Bluetooth. In Bluetooth mode, commands and fresh state ne
 
 In Fleet mode a sleeping car is not woken just to read its state, so the app shows the last known state and its age. It wakes the car only to run a command you confirm.
 
-### "Car unreachable" or "No connection"
+### "The car did not wake in time"
 
-Neither Bluetooth nor the Fleet API reached the car: the car may have no mobile signal (an underground car park), or the watch may be offline.
+The command needed the car awake, and it was still not online after about 45 seconds. Tesla says a wake can take up to 60 seconds, and a car with a poor mobile signal can answer HTTP 408 even after it looks online. The watch shows **Waking the car…** while it waits, then this message. It does not keep spinning, and it does not send the command again after that.
+
+- Next to the car, the watch tries a Bluetooth wake first. Stay close and confirm the command again.
+- Away from the car, it may be somewhere with no signal (an underground car park). Open a door or tap the screen so it wakes, then try again.
+
+### "No connection"
+
+The watch could not reach Tesla's Fleet API at all: the watch is offline, or the request failed before Tesla answered. Bluetooth commands still need you to be near the car.
 
 ### "Sign in again"
 

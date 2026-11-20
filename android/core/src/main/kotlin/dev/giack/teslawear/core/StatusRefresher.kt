@@ -76,8 +76,11 @@ class StatusRefresher(
             when (val result = cloud.api.vehicleData(cloud.vin)) {
                 is FleetResult.Ok -> result.value.also { it.carConfig?.let(onCarConfig) }
                 is FleetResult.Error -> null.also { onCloudError(IOException("Fleet API ${result.code}: ${result.message}")) }
-                FleetResult.Asleep ->
-                    if (wake && cloud.wakeAndWait(nowMs, sleep)) viaCloud(current) else current?.copy(asleep = true, checkedAtMs = nowMs())
+                FleetResult.Asleep -> when {
+                    !wake -> current?.copy(asleep = true, checkedAtMs = nowMs())
+                    cloud.wakeAndWait(nowMs, sleep) == WakeWait.Online -> viaCloud(current)
+                    else -> current?.copy(asleep = true, checkedAtMs = nowMs())
+                }
             }
         } catch (e: IOException) {
             onCloudError(e)
