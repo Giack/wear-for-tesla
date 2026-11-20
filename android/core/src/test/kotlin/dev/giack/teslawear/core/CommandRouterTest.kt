@@ -3,12 +3,14 @@ package dev.giack.teslawear.core
 import dev.giack.teslawear.core.fleet.AuthRequiredException
 import dev.giack.teslawear.core.fleet.FleetRejectedException
 import dev.giack.teslawear.core.fleet.FleetResult
+import dev.giack.teslawear.core.fleet.VehicleAsleepException
 import dev.giack.teslawear.protocol.BleKeyRole
 import dev.giack.teslawear.protocol.CommandResult
 import dev.giack.teslawear.protocol.TransportUnavailableException
 import dev.giack.teslawear.protocol.VehicleCommand
 import kotlinx.coroutines.test.runTest
 import java.io.IOException
+import java.net.SocketTimeoutException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -50,8 +52,96 @@ class CommandRouterTest {
     @Test fun routerReportsUnreachableAfterWakeTimeout() = runTest {
         val cloud = FakeCloud().apply { api.states += FleetResult.Ok("asleep") }
         assertEquals(RouteOutcome.Unreachable, router(FakeBle(), cloud).execute(VehicleCommand.ClimateOn))
-        assertTrue(clock >= 45_000)
+        // Backoff poll, capped at 45s: one wake, the state checks, and no command.
+        assertEquals(45_000, clock)
+        assertEquals(1, cloud.api.wakes)
+        assertEquals(9, cloud.api.stateReads)
         assertTrue(cloud.runner.executed.isEmpty())
+    }
+
+    @Test fun routerWakesOfflineCarThenSendsOnce() = runTest {
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("offline"); api.states += FleetResult.Ok("offline"); api.states += FleetResult.Ok("online")
+        }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock), cloud.runner.executed)
+        assertEquals(1, cloud.api.wakes)
+    }
+
+    @Test fun privilegesFaultOnAsleepCarWakesOverBleThenSendsOnce() = runTest {
+        val ble = FakeBle(reachable = true, canWakeOverBle = true).apply {
+            var calls = 0
+            runner.result = {
+                calls++
+                // The user's command is refused for this key's role; the VCSEC wake itself succeeds.
+                if (calls == 1) CommandResult.Failed("MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES") else CommandResult.Ok
+            }
+        }
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("asleep"); api.states += FleetResult.Ok("online")
+        }
+        val progress = mutableListOf<Progress>()
+        val outcome = router(ble, cloud).execute(VehicleCommand.SentryOn) { progress += it }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), outcome)
+        assertEquals(listOf(Progress.WAKING_CAR), progress)
+        assertEquals(1, ble.bleWakes)
+        assertEquals(listOf(VehicleCommand.SentryOn, VehicleCommand.WakeVehicle), ble.runner.executed)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.SentryOn), cloud.runner.executed)
+    }
+
+    @Test fun doorUnlatchInRangeWakesOverBleThenSendsOnce() = runTest {
+        val ble = FakeBle(reachable = true, canWakeOverBle = true)
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("asleep"); api.states += FleetResult.Ok("online")
+        }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(ble, cloud).execute(VehicleCommand.UnlatchDriverDoor))
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.WakeVehicle), ble.runner.executed)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.UnlatchDriverDoor), cloud.runner.executed)
+    }
+
+    @Test fun wakeReadTimeoutStillPollsAndSendsOnce() = runTest {
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("asleep"); api.states += FleetResult.Ok("online")
+            api.wakeFailure = SocketTimeoutException("read timed out")
+        }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Honk))
+        assertEquals(1, cloud.api.wakes)
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Honk), cloud.runner.executed)
+    }
+
+    @Test fun stateReadTimeoutWakesInsteadOfNoConnection() = runTest {
+        val cloud = FakeCloud().apply {
+            api.stateFailures += SocketTimeoutException("read timed out")
+            api.states += FleetResult.Ok("online")
+        }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
+        assertEquals(1, cloud.api.wakes)
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock), cloud.runner.executed)
+    }
+
+    @Test fun command408WakesAndRetriesOnce() = runTest {
+        val cloud = FakeCloud().apply { api.states += FleetResult.Ok("online") }
+        var attempts = 0
+        cloud.runner.result = {
+            attempts++
+            if (attempts == 1) throw VehicleAsleepException() else CommandResult.Ok
+        }
+        val progress = mutableListOf<Progress>()
+        val outcome = router(FakeBle(), cloud).execute(VehicleCommand.Lock) { progress += it }
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), outcome)
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock, VehicleCommand.Lock), cloud.runner.executed)
+        assertEquals(1, cloud.api.wakes)
+        assertEquals(listOf(Progress.WAKING_CAR), progress)
+    }
+
+    @Test fun command408TwiceDoesNotSendAThirdTime() = runTest {
+        val cloud = FakeCloud().apply { api.states += FleetResult.Ok("online") }
+        cloud.runner.result = { throw VehicleAsleepException() }
+        assertEquals(RouteOutcome.Unreachable, router(FakeBle(), cloud).execute(VehicleCommand.Honk))
+        assertEquals(listOf<VehicleCommand>(VehicleCommand.Honk, VehicleCommand.Honk), cloud.runner.executed)
+        assertEquals(1, cloud.api.wakes)
     }
 
     @Test fun routerFailsCleanlyWithNoChannel() = runTest {

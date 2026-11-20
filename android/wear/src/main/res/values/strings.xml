@@ -60,7 +60,7 @@
     <string name="outcome_error">Error: %1$s</string>
     <string name="outcome_unknown">Unknown result</string>
     <string name="outcome_no_connection">No connection</string>
-    <string name="outcome_unreachable">Car unreachable</string>
+    <string name="outcome_unreachable">The car did not wake in time</string>
     <string name="outcome_sign_in_again">Sign in again</string>
     <string name="outcome_out_of_range">Car out of Bluetooth range</string>
     <string name="outcome_needs_fleet">This command needs Fleet mode</string>

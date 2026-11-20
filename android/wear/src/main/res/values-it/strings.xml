@@ -47,7 +47,7 @@
     <string name="outcome_error">Errore: %1$s</string>
     <string name="outcome_unknown">Esito sconosciuto</string>
     <string name="outcome_no_connection">Nessuna connessione</string>
-    <string name="outcome_unreachable">Auto non raggiungibile</string>
+    <string name="outcome_unreachable">L\'auto non si è svegliata in tempo</string>
     <string name="outcome_sign_in_again">Accedi di nuovo</string>
     <string name="outcome_out_of_range">Auto fuori portata Bluetooth</string>
     <string name="outcome_needs_fleet">Questo comando richiede la modalità Fleet</string>

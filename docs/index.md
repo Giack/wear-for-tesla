@@ -164,7 +164,7 @@ Add the Tile for battery, range and four commands without opening the app. Watch
 
 ### Climate, closures, charge
 
-Lock and unlock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn, and unlatch the driver door. Sentry, charging and the other commands go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode, and the watch says so when Fleet mode is off. In Fleet mode the app wakes a sleeping car only to run a command you have confirmed. A state read never wakes it.
+Lock and unlock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn, and unlatch the driver door. Sentry, charging and the other commands go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode, and the watch says so when Fleet mode is off. In Fleet mode the app wakes a sleeping car only to run a command you have confirmed: over Bluetooth when the watch is in range, otherwise with Fleet `wake_up`, then the command once the car is online. A state read never wakes it.
 
 </article>
 

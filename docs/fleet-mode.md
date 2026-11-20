@@ -10,8 +10,22 @@ Set up [Bluetooth mode](bluetooth-mode.md) first: Fleet mode adds to it, it does
 - Unlatching the driver door always uses the Fleet API, even next to the car. The Bluetooth key has the driver role, and the car answers `MESSAGEFAULT_ERROR_INSUFFICIENT_PRIVILEGES` for that command. With Fleet mode off, the watch says the command needs Fleet mode.
 - The app learns the car's real model, paint and wheels, replacing what you picked.
 - The app finds your Fleet API region (North America, Europe, …) after you sign in.
-- The app wakes a sleeping car **only to run a command you confirmed**, never just to read its state.
+- The app wakes a sleeping car **only to run a command you confirmed**, never just to read its state. See [A sleeping car](#a-sleeping-car).
 - Your usage is counted against a [monthly budget](budget.md).
+
+## A sleeping car
+
+A confirmed command is the only thing that wakes the car. Tesla will not run a command while the vehicle's `state` is `asleep` or `offline`. Those calls come back as HTTP **408** (`vehicle unavailable`), and after a wake the car can take **10–60 seconds** to come online. Checking `state` on `GET /api/1/vehicles/{vin}` before the command, and treating a 408 as "not online yet", is what Tesla asks for in [Best practices](https://developer.tesla.com/docs/fleet-api/getting-started/best-practices) and [Conventions](https://developer.tesla.com/docs/fleet-api/getting-started/conventions). `POST /api/1/vehicles/{vin}/wake_up` is the Fleet API wake ([Vehicle endpoints](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-endpoints)).
+
+The watch does it in this order:
+
+1. If the watch is in Bluetooth range, it wakes the car over Bluetooth (the VCSEC wake). That costs nothing.
+2. Otherwise it calls Fleet `wake_up`. That call, and every later check of the vehicle's `state`, is counted in the [budget](budget.md).
+3. It then checks `state` with increasing pauses (1s, 2s, 4s, then 8s) until it is `online`, for at most **45 seconds**. The screen says **Waking the car…** the whole time.
+4. It sends the command **once**. If Tesla answers that command with 408, the watch wakes the car once more and sends the command a single time again. It never sends it a third time.
+5. If the car is still not online, the watch says **The car did not wake in time**. It does not keep spinning.
+
+A client-side timeout is different from a 408: the command may already have reached the car, so the watch does not send it again and reports an unknown result instead.
 
 ## Why your own Developer app?
 

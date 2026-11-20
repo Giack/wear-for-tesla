@@ -35,6 +35,12 @@ class FleetTransportTest {
         assertEquals(429, e.code)
     }
 
+    // 408: the vehicle was not online, so the command was not run and may be retried after a wake.
+    @Test fun asleepVehicleIsNotARejection() = runTest {
+        server.enqueue(MockResponse().setResponseCode(408).setBody("""{"error":"vehicle unavailable"}"""))
+        assertFailsWith<VehicleAsleepException> { transport.send(RoutableMessage.getDefaultInstance(), 1_000) }
+    }
+
     // A 5xx may come after Tesla forwarded the command: the outcome is unknown.
     @Test fun serverErrorMeansOutcomeUnknown() = runTest {
         server.enqueue(MockResponse().setResponseCode(503).setBody("""{"error":"upstream"}"""))

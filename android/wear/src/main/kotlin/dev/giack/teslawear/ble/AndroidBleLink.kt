@@ -91,6 +91,23 @@ class AndroidBleLink(
     // Infotainment sleeps while VCSEC listens: wake it over BLE before infotainment commands.
     private val waking = WakingRunner(probe)
 
+    /**
+     * Free wake for a Fleet command while the watch is next to the car. VCSEC answers
+     * `RKE_ACTION_WAKE_VEHICLE` without a Fleet `wake_up`. Out of range, the router uses the API.
+     */
+    override suspend fun wakeIfNear(): Boolean {
+        if (!isReachable(WAKE_PROBE_MS)) return false
+        return try {
+            Diag.i("BLE wake before Fleet command")
+            (commands.execute(VehicleCommand.WakeVehicle) is CommandResult.Ok).also { ok ->
+                Diag.i("BLE wake ${if (ok) "ok" else "failed"}")
+            }
+        } catch (e: TransportUnavailableException) {
+            Diag.w("BLE wake failed", e)
+            false
+        }
+    }
+
     override val commands: CommandRunner = object : CommandRunner {
         override suspend fun execute(cmd: VehicleCommand): CommandResult {
             idleJob?.cancel()
@@ -179,6 +196,7 @@ class AndroidBleLink(
             generateSequence(e) { it.cause }.take(3).joinToString(" ← ") { "${it.javaClass.simpleName}: ${it.message}" }
 
         private const val SCAN_MS = 3_000L
+        private const val WAKE_PROBE_MS = 2_500L
         private const val SEEN_GRACE_MS = 30_000L
         private const val IDLE_DISCONNECT_MS = 10_000L
     }

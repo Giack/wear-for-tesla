@@ -16,6 +16,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.Base64
+import java.util.concurrent.TimeUnit
 
 sealed interface FleetResult<out T> {
     data class Ok<T>(val value: T) : FleetResult<T>
@@ -50,7 +51,17 @@ class FleetApiClient(
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) : VehicleApi {
     // OkHttp silently repeats a request answered with 408 (vehicle asleep); every repeat is billed.
-    private val http = http.newBuilder().retryOnConnectionFailure(false).build()
+    // Tesla holds wake_up and signed_command open, then answers 408 when the car is not online
+    // (developer.tesla.com Fleet API conventions). The default 10s read timeout cancels that
+    // wait locally, so the 408 never arrives and the command looks like a client timeout.
+    // These overrides apply only to this copy; the shared client used for sign-in is unchanged.
+    private val http = http.newBuilder()
+        .retryOnConnectionFailure(false)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(READ_TIMEOUT_S, TimeUnit.SECONDS)
+        .callTimeout(CALL_TIMEOUT_S, TimeUnit.SECONDS)
+        .build()
 
     override suspend fun vehicleState(vin: String): FleetResult<String> =
         call(UsageKind.DATA, get("api/1/vehicles/$vin")) { body ->
@@ -122,5 +133,7 @@ class FleetApiClient(
     private companion object {
         val JSON = "application/json".toMediaType()
         const val NOT_REGISTERED_HERE = 412
+        const val READ_TIMEOUT_S = 20L
+        const val CALL_TIMEOUT_S = 30L
     }
 }

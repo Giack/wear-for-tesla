@@ -6,6 +6,14 @@ import dev.giack.teslawear.protocol.CommandRunner
 /** Direct Bluetooth path to the car. */
 interface BleLink {
     suspend fun isReachable(timeoutMs: Long): Boolean
+
+    /**
+     * Wakes infotainment over VCSEC (`RKE_ACTION_WAKE_VEHICLE`) when the watch is connected
+     * or in range. False when Bluetooth cannot reach the car, so the caller uses Fleet `wake_up`.
+     * Links that do not implement it never pretend the car was woken.
+     */
+    suspend fun wakeIfNear(): Boolean = false
+
     val commands: CommandRunner
     /** Status readable without waking the car; null if nothing could be read. */
     suspend fun readStatus(): Snapshot?
