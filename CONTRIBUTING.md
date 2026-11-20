@@ -100,6 +100,8 @@ The pipeline is the one already used for Model 3 and Model Y. Read both READMEs 
 - Pull requests are **squash-merged**, so the pull request title becomes the commit subject.
 - Workflows from first-time contributors' forks run only after the maintainer approves them.
 
+Merging a pull request that changes `android/` publishes a release on its own: the next patch version (v0.2.1 → v0.2.2) is tagged, and the signed APK is attached to the GitHub Release. The maintainer can change that with a label on the pull request before merging: `release:minor` (v0.3.0), `release:major` (v1.0.0), or `release:skip` (no release). A minor or major label releases even a docs-only change.
+
 Expect a first review within a couple of weeks. Small, focused pull requests get merged much faster than large ones.
 
 ## Licence

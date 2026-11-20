@@ -1,0 +1,92 @@
+# On every merge to main that changes the app, picks the next version and runs the Release workflow,
+# which builds the signed APK and creates the tag together with the GitHub Release.
+#
+# The bump comes from the labels of the merged pull request:
+#   (none)         patch  v0.2.1 -> v0.2.2
+#   release:minor  minor  v0.2.1 -> v0.3.0
+#   release:major  major  v0.2.1 -> v1.0.0
+#   release:skip   no release
+# A minor or major label releases even when nothing under android/ changed.
+#
+# The tag is created with GITHUB_TOKEN, which never triggers other workflows, so Release is called
+# directly here instead of being left to its tag trigger. The "release tags" ruleset blocks only
+# moving and deleting v* tags, not creating them: a personal repository cannot list the GitHub
+# Actions app as a bypass actor.
+name: Auto release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Two quick merges must not compute the same tag: run them one after the other, never cancel.
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      tag: ${{ steps.next.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Bump from the pull request labels
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          labels=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '[.[0].labels[].name] | join(",")' || true)
+          echo "labels: ${labels:-none}"
+          # Same rule as the CI changes job; unknown base (force push) counts as an app change.
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null \
+            || git diff --name-only --no-renames "$BEFORE" HEAD | grep -q '^android/'; then app=true; else app=false; fi
+          echo "app changed: $app"
+          case ",$labels," in
+            *,release:skip,*)  bump='none' ;;
+            *,release:major,*) bump='major' ;;
+            *,release:minor,*) bump='minor' ;;
+            *) if [[ "$app" == true ]]; then bump='patch'; else bump='none'; fi ;;
+          esac
+          echo "bump: $bump"
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+
+      - name: Next tag
+        id: next
+        if: steps.bump.outputs.bump != 'none'
+        env:
+          BUMP: ${{ steps.bump.outputs.bump }}
+        run: |
+          # Latest stable tag; pre-releases (v0.1-rc1) are ignored.
+          last=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | head -1)
+          [[ "${last:-v0.0.0}" =~ ^v([0-9]+)\.([0-9]+)(\.([0-9]+))?$ ]]
+          major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} patch=${BASH_REMATCH[4]:-0}
+          case "$BUMP" in
+            major) major=$((major + 1)) minor=0 patch=0 ;;
+            minor) minor=$((minor + 1)) patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+          # versionCode packs patch and minor into three digits each (see release.yml).
+          (( minor < 1000 && patch < 1000 )) || { echo "version out of range"; exit 1; }
+          tag="v$major.$minor.$patch"
+          echo "${last:-none} -> $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: plan
+    if: needs.plan.outputs.tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.plan.outputs.tag }}
+    secrets: inherit

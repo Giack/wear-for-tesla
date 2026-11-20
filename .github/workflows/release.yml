@@ -1,10 +1,18 @@
 # Pushing a tag like v0.1 or v0.1.1 builds the Public APK, signs it with the release key from the
 # repository secrets and attaches it to a GitHub Release. A tag with a suffix (v0.1-rc1) makes a pre-release.
+# Auto release also calls it after a merge to main, with a tag that does not exist yet: the release
+# then creates it on the merged commit.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag to release, created on the calling commit if it does not exist
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -23,7 +31,7 @@ jobs:
       - name: Version from the tag
         id: version
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)(\.([0-9]+))?(-[0-9A-Za-z.]+)?$ ]] || { echo "bad tag $TAG"; exit 1; }
           # versionCode grows with every release, so each APK installs over the previous one.
@@ -47,18 +55,20 @@ jobs:
           ./gradlew test :wear:assemblePublicRelease -PversionName="$VERSION_NAME" -PversionCode="$VERSION_CODE"
           rm -f "$WEAR_KEYSTORE"
           apk=wear/build/outputs/apk/public/release/wear-public-release.apk
-          # Refuse to publish an APK that fell back to the debug key.
+          # Refuse to publish an APK that is unsigned or fell back to the debug key. A bare "! grep"
+          # never trips errexit, and the default shell has no pipefail, so both are explicit.
+          set -o pipefail
           "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" | tee certs.txt
-          ! grep -q "CN=Android Debug" certs.txt
+          if grep -q "CN=Android Debug" certs.txt; then echo "APK is debug-signed"; exit 1; fi
           cp "$apk" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk"
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
           VERSION_NAME: ${{ steps.version.outputs.name }}
           PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
           flags=(--generate-notes --title "Wear for Tesla $VERSION_NAME")
           [[ "$PRERELEASE" == true ]] && flags+=(--prerelease)
-          gh release create "$TAG" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk" "${flags[@]}"
+          gh release create "$TAG" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk" --target "$GITHUB_SHA" "${flags[@]}"
