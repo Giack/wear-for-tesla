@@ -63,9 +63,23 @@ android {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        // Everyday Personal build: release without debuggable, because a debuggable build turns off
+        // R8's optimisation and renaming and nearly doubles the APK (7 MB vs 3.9 MB). Same key as release, so
+        // the two install over each other keeping the app's data: switch to release only when run-as
+        // is needed (pulling diag.log, setup.sh push-watch).
+        create("compact") {
+            initWith(getByName("release"))
+            isDebuggable = false
+            matchingFallbacks += "release"
+        }
     }
 
-    packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+    packaging {
+        resources.excludes += listOf("/META-INF/{AL2.0,LGPL2.1}", "**/*.proto")
+        // Compressed dex: the APK crosses the watch's flaky Wi-Fi, and minSdk 33 would otherwise store
+        // it uncompressed (about twice the transfer). The watch extracts it once at install.
+        dex.useLegacyPackaging = true
+    }
 
     // Localisation (ticket 10): English default plus Italian. Kotlin-side literals are checked by
     // HardcodedStringsTest, since HardcodedText only sees XML.
@@ -74,6 +88,11 @@ android {
         checkOnly += listOf("HardcodedText", "MissingTranslation", "ExtraTranslation", "StringFormatMatches", "StringFormatInvalid",
             "StringFormatCount", "PluralsCandidate", "MissingQuantity", "UnusedQuantity")
     }
+}
+
+// compact exists only for Personal; Public users always need run-as for push-watch.
+androidComponents {
+    beforeVariants(selector().withFlavor("edition" to "public").withBuildType("compact")) { it.enable = false }
 }
 
 dependencies {
