@@ -36,4 +36,4 @@ While the app is closed it checks the car twice an hour, so the watch face, Tile
 
 ## Keeping usage low
 
-The app already avoids the expensive parts: the Tile and confirmation screen read only over Bluetooth, opening the app reads over the cloud only when the state on screen is more than two minutes old, and it wakes the car only for a command you confirmed. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.
+The app already avoids the expensive parts: the Tile and confirmation screen read only over Bluetooth, opening the app reads over the cloud only when the state on screen is more than two minutes old (sooner only when a wake or a command in those two minutes is newer than the stored state), and it wakes the car only for a command you confirmed or when you tap **Refresh**. After a Fleet command or a wake, up to two extra state reads — one after about 3 seconds, one after about 8 — confirm the new value. They stop early when it matches or the budget is used up, and they never wake the car. Tapping **Refresh** while the car is far away is what spends the budget, so refresh when you need to.

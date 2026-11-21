@@ -35,7 +35,9 @@ The car is too far for Bluetooth. In Bluetooth mode, commands and fresh state ne
 
 ### The state is old ("car asleep · data from …")
 
-In Fleet mode a sleeping car is not woken just to read its state, so the app shows the last known state and its age. It wakes the car only to run a command you confirm.
+In Fleet mode a sleeping car is not woken just to read its state, so the app shows the last known state and its age. It wakes the car only to run a command you confirm, or when you tap **Refresh**.
+
+After a command that ran, the watch stops showing the car as asleep and shows the state you asked for immediately. **Updated … ago** is the last time a read came back, not the moment you confirmed. If the command woke the car or went through the Fleet API, the watch checks again after about 3 seconds and about 8 seconds so the numbers catch up. Those checks do not wake the car. Opening the app in the next two minutes reads once more if the stored state is still from before the command.
 
 ### "The car did not wake in time"
 

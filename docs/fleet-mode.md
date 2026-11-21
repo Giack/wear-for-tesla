@@ -25,6 +25,10 @@ The watch does it in this order:
 4. It sends the command **once**. If Tesla answers that command with 408, the watch wakes the car once more and sends the command a single time again. It never sends it a third time.
 5. If the car is still not online, the watch says **The car did not wake in time**. It does not keep spinning.
 
+The watch then shows the state you asked for straight away, on the home screen and on the confirmation screen. The car is no longer shown as asleep. **Updated … ago** stays the time of the last real read until a new one arrives.
+
+When that command went through the Fleet API, or the car had to be woken, Tesla often still reports the previous state for a few seconds. The watch reads again after about 3 seconds and, if the value you changed is still the old one, once more after about 8 seconds. It stops as soon as the read matches the command. Those reads count in the [budget](budget.md). Bluetooth is used instead when the car is in range. They never wake the car. Opening the app within two minutes of a wake or a command reads once more when what is stored is still from before it, again without waking.
+
 A client-side timeout is different from a 408: the command may already have reached the car, so the watch does not send it again and reports an unknown result instead.
 
 ## Why your own Developer app?

@@ -1,13 +1,16 @@
 package dev.giack.teslawear.confirm
 
 import dev.giack.teslawear.R
+import dev.giack.teslawear.core.Channel
+import dev.giack.teslawear.core.CommandFollowUp
 import dev.giack.teslawear.core.Progress
 import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.RefreshTrigger
 import dev.giack.teslawear.core.RouteOutcome
 import dev.giack.teslawear.core.Snapshot
 import dev.giack.teslawear.core.ToggleResolver
-import dev.giack.teslawear.core.afterCommand
+import dev.giack.teslawear.core.afterOutcome
+import dev.giack.teslawear.core.stateCode
 import dev.giack.teslawear.core.fleet.AuthRequiredException
 import dev.giack.teslawear.protocol.CommandResult
 import dev.giack.teslawear.protocol.VehicleCommand
@@ -37,6 +40,8 @@ class ConfirmController(
     /** Runs work that must outlive the confirmation screen (app-scoped). */
     private val background: (suspend () -> Unit) -> Unit,
     private val nowMs: () -> Long = System::currentTimeMillis,
+    /** Post-command read, including the bounded follow-up when the command ran over Fleet or woke the car. */
+    private val refreshAfter: suspend (CommandFollowUp) -> Snapshot? = { refresh(RefreshTrigger.AFTER_COMMAND) },
 ) {
     private val _ui = MutableStateFlow(ConfirmUi(null, null, Phase.RESOLVING, null))
     val ui: StateFlow<ConfirmUi> = _ui
@@ -72,11 +77,15 @@ class ConfirmController(
             else -> Phase.ERROR
         }
         _ui.value = _ui.value.copy(phase = phase, message = failure)
-        if (outcome is RouteOutcome.Done && outcome.result == CommandResult.Ok) {
-            snapshot()?.let { save(it.afterCommand(cmd, nowMs(), outcome.channel)) }
+        val done = outcome as? RouteOutcome.Done
+        snapshot()?.let { current ->
+            val next = current.afterOutcome(cmd, outcome, nowMs())
+            if (next != current) save(next)
         }
+        val fleetOrWoken = done?.result == CommandResult.Ok && cmd.stateCode() != null &&
+            (done.channel == Channel.CLOUD || outcome.woke)
         background {
-            runCatching { refresh(RefreshTrigger.AFTER_COMMAND) }
+            runCatching { refreshAfter(CommandFollowUp(cmd, fleetOrWoken)) }
             afterCommand()
         }
     }

@@ -39,6 +39,10 @@ class FakeApi : VehicleApi {
     var dataCalls = 0
     var stateReads = 0
     var wakes = 0
+    /** Answered in order by [vehicleData]; empty falls through to [dataAfterWake] or [data]. */
+    var scripted = ArrayDeque<FleetResult<Snapshot>>()
+    /** Runs after a [vehicleData] call is counted, so a test can record it on the usage meter. */
+    var onData: () -> Unit = {}
     var failWith: Exception? = null
     /** Thrown from the next [vehicleState] calls, one each, without failing the rest. */
     var stateFailures = ArrayDeque<Exception>()
@@ -56,6 +60,8 @@ class FakeApi : VehicleApi {
     override suspend fun vehicleData(vin: String): FleetResult<Snapshot> {
         failWith?.let { throw it }
         dataCalls++
+        onData()
+        scripted.removeFirstOrNull()?.let { return it }
         return dataAfterWake?.takeIf { wakes > 0 } ?: data
     }
     override suspend fun wakeUp(vin: String): FleetResult<Unit> {

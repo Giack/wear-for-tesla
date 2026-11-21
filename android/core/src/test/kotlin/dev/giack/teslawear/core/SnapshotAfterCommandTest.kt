@@ -22,11 +22,22 @@ class SnapshotAfterCommandTest {
         assertEquals(false, base.copy(charging = true).afterCommand(VehicleCommand.ChargeStop, 5, Channel.BLE).charging)
     }
 
-    @Test fun keepsOtherFieldsAndStampsTime() {
-        val s = base.afterCommand(VehicleCommand.Lock, 99, Channel.BLE)
+    @Test fun keepsOtherFieldsAndTheTimeOfTheLastRead() {
+        val asleep = base.copy(asleep = true)
+        val s = asleep.afterCommand(VehicleCommand.Lock, 99, Channel.BLE)
         assertEquals(78, s.batteryPct)
-        assertEquals(99, s.updatedAtMs)
+        assertEquals(1, s.updatedAtMs)
+        assertEquals(99, s.actedAtMs)
+        assertEquals(false, s.asleep)
+        assertEquals("lock", s.pendingCommand)
         assertEquals(Channel.BLE, s.channel)
+        assertEquals(true, s.reflects(VehicleCommand.Lock))
+    }
+
+    @Test fun aStaleReadDoesNotCountAsReflectingTheCommand() {
+        assertEquals(false, base.reflects(VehicleCommand.Unlock))
+        assertEquals(true, base.copy(locked = false).reflects(VehicleCommand.Unlock))
+        assertEquals(true, base.copy(setTempC = 21.5f).reflects(VehicleCommand.SetTemp(21.5f)))
     }
 
     @Test fun commandsWithoutStateLeaveSnapshotUnchanged() {
