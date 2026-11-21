@@ -2,11 +2,13 @@
 # which builds the signed APK and creates the tag together with the GitHub Release.
 #
 # The bump comes from the labels of the merged pull request:
-#   (none)         patch  v0.2.1 -> v0.2.2
+#   (none)         patch  v0.2.1 -> v0.2.2   only when android/ changed
+#   release:patch  patch  v0.2.1 -> v0.2.2   even when android/ did not change
 #   release:minor  minor  v0.2.1 -> v0.3.0
 #   release:major  major  v0.2.1 -> v1.0.0
 #   release:skip   no release
-# A minor or major label releases even when nothing under android/ changed.
+# A patch, minor or major label releases even when nothing under android/ changed.
+# skip wins over the version labels; major wins over minor; minor wins over patch.
 #
 # The tag is created with GITHUB_TOKEN, which never triggers other workflows, so Release is called
 # directly here instead of being left to its tag trigger. The "release tags" ruleset blocks only
@@ -55,6 +57,7 @@ jobs:
             *,release:skip,*)  bump='none' ;;
             *,release:major,*) bump='major' ;;
             *,release:minor,*) bump='minor' ;;
+            *,release:patch,*) bump='patch' ;;
             *) if [[ "$app" == true ]]; then bump='patch'; else bump='none'; fi ;;
           esac
           echo "bump: $bump"
