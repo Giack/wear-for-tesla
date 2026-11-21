@@ -44,7 +44,7 @@ class CommandRouterTest {
         }
         val progress = mutableListOf<Progress>()
         val outcome = router(FakeBle(), cloud).execute(VehicleCommand.ClimateOn) { progress += it }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), outcome)
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), outcome)
         assertEquals(1, cloud.api.wakes)
         assertEquals(listOf(Progress.WAKING_CAR), progress)
     }
@@ -63,7 +63,7 @@ class CommandRouterTest {
         val cloud = FakeCloud().apply {
             api.states += FleetResult.Ok("offline"); api.states += FleetResult.Ok("offline"); api.states += FleetResult.Ok("online")
         }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
         assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock), cloud.runner.executed)
         assertEquals(1, cloud.api.wakes)
     }
@@ -82,7 +82,7 @@ class CommandRouterTest {
         }
         val progress = mutableListOf<Progress>()
         val outcome = router(ble, cloud).execute(VehicleCommand.SentryOn) { progress += it }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), outcome)
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), outcome)
         assertEquals(listOf(Progress.WAKING_CAR), progress)
         assertEquals(1, ble.bleWakes)
         assertEquals(listOf(VehicleCommand.SentryOn, VehicleCommand.WakeVehicle), ble.runner.executed)
@@ -95,7 +95,7 @@ class CommandRouterTest {
         val cloud = FakeCloud().apply {
             api.states += FleetResult.Ok("asleep"); api.states += FleetResult.Ok("online")
         }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(ble, cloud).execute(VehicleCommand.UnlatchDriverDoor))
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), router(ble, cloud).execute(VehicleCommand.UnlatchDriverDoor))
         assertEquals(listOf<VehicleCommand>(VehicleCommand.WakeVehicle), ble.runner.executed)
         assertEquals(0, cloud.api.wakes)
         assertEquals(listOf<VehicleCommand>(VehicleCommand.UnlatchDriverDoor), cloud.runner.executed)
@@ -106,7 +106,7 @@ class CommandRouterTest {
             api.states += FleetResult.Ok("asleep"); api.states += FleetResult.Ok("online")
             api.wakeFailure = SocketTimeoutException("read timed out")
         }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Honk))
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), router(FakeBle(), cloud).execute(VehicleCommand.Honk))
         assertEquals(1, cloud.api.wakes)
         assertEquals(listOf<VehicleCommand>(VehicleCommand.Honk), cloud.runner.executed)
     }
@@ -116,7 +116,7 @@ class CommandRouterTest {
             api.stateFailures += SocketTimeoutException("read timed out")
             api.states += FleetResult.Ok("online")
         }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), router(FakeBle(), cloud).execute(VehicleCommand.Lock))
         assertEquals(1, cloud.api.wakes)
         assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock), cloud.runner.executed)
     }
@@ -130,7 +130,7 @@ class CommandRouterTest {
         }
         val progress = mutableListOf<Progress>()
         val outcome = router(FakeBle(), cloud).execute(VehicleCommand.Lock) { progress += it }
-        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD), outcome)
+        assertEquals(RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true), outcome)
         assertEquals(listOf<VehicleCommand>(VehicleCommand.Lock, VehicleCommand.Lock), cloud.runner.executed)
         assertEquals(1, cloud.api.wakes)
         assertEquals(listOf(Progress.WAKING_CAR), progress)

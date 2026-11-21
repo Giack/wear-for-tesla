@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.wear.compose.material3.Text
 import dev.giack.teslawear.R
 import dev.giack.teslawear.core.QuickAction
+import dev.giack.teslawear.core.RefreshTrigger
 import dev.giack.teslawear.core.RouteOutcome
 import dev.giack.teslawear.diag.Diag
 import dev.giack.teslawear.graph
@@ -51,6 +52,10 @@ class ConfirmViewModel(app: Application, action: QuickAction) : AndroidViewModel
         action = action,
         snapshot = { graph.snapshots.load() },
         refresh = { trigger -> graph.provisioned()?.refresher?.refresh(trigger) ?: graph.snapshots.load() },
+        refreshAfter = { follow ->
+            graph.provisioned()?.refresher?.refresh(RefreshTrigger.AFTER_COMMAND, follow)
+                ?: graph.snapshots.load()
+        },
         execute = { cmd, progress ->
             (graph.provisioned()?.router?.execute(cmd, progress) ?: RouteOutcome.AuthRequired).also { Diag.i("Tile command $cmd → $it") }
         },

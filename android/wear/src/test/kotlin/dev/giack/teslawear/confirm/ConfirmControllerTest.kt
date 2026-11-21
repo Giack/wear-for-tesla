@@ -78,7 +78,9 @@ class ConfirmControllerTest {
         val c = controller(QuickAction.LOCK, locked2hAgo, rec = rec)
         c.resolve(); c.confirm()
         assertEquals(false, rec.saved.single().locked)
-        assertEquals(now, rec.saved.single().updatedAtMs)
+        assertEquals(locked2hAgo.updatedAtMs, rec.saved.single().updatedAtMs)
+        assertEquals(false, rec.saved.single().asleep)
+        assertEquals(now, rec.saved.single().actedAtMs)
     }
 
     @Test fun refreshRunsOutsideTheScreenScope() = runTest {

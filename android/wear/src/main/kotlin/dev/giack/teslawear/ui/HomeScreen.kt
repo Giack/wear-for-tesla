@@ -36,6 +36,7 @@ import androidx.wear.compose.material3.TextButton
 import dev.giack.teslawear.R
 import dev.giack.teslawear.core.Channel
 import dev.giack.teslawear.core.QuickAction
+import dev.giack.teslawear.core.RefreshTrigger
 import dev.giack.teslawear.core.RouteOutcome
 import dev.giack.teslawear.core.ToggleResolver
 import dev.giack.teslawear.core.usage.BudgetLevel
@@ -53,6 +54,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     val controller = HomeController(
         refresh = { t -> graph.provisioned()?.refresher?.refresh(t) ?: graph.snapshots.load() },
         snapshot = { graph.snapshots.load() },
+        save = { graph.snapshots.save(it) },
+        refreshAfter = { follow, onUpdate ->
+            graph.provisioned()?.refresher?.refresh(RefreshTrigger.AFTER_COMMAND, follow, onUpdate)
+                ?: graph.snapshots.load()
+        },
         execute = { cmd, p ->
             (graph.provisioned()?.router?.execute(cmd, p) ?: RouteOutcome.AuthRequired).also { Diag.i("App command $cmd → $it") }
         },

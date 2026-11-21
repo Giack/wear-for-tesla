@@ -2,14 +2,19 @@ package dev.giack.teslawear.ui
 
 import dev.giack.teslawear.R
 import dev.giack.teslawear.core.Age
+import dev.giack.teslawear.core.Channel
+import dev.giack.teslawear.core.CommandFollowUp
 import dev.giack.teslawear.core.Progress
 import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.RefreshTrigger
 import dev.giack.teslawear.core.RouteOutcome
 import dev.giack.teslawear.core.Snapshot
 import dev.giack.teslawear.core.ToggleResolver
+import dev.giack.teslawear.core.afterOutcome
+import dev.giack.teslawear.core.stateCode
 import dev.giack.teslawear.core.fleet.AuthRequiredException
 import dev.giack.teslawear.core.usage.BudgetLevel
+import dev.giack.teslawear.protocol.CommandResult
 import dev.giack.teslawear.protocol.VehicleCommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -49,6 +54,14 @@ class HomeController(
     private val scope: CoroutineScope,
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val debounceMs: Long = 1_500,
+    /** Persists the expected state straight away, before the post-command read comes back. */
+    private val save: suspend (Snapshot) -> Unit = {},
+    /**
+     * Post-command read. [onUpdate] runs as each read is stored, so Home can show it before the follow-up finishes.
+     * The default is a single [RefreshTrigger.AFTER_COMMAND] read.
+     */
+    private val refreshAfter: suspend (followUp: CommandFollowUp, onUpdate: (Snapshot) -> Unit) -> Snapshot? =
+        { _, _ -> refresh(RefreshTrigger.AFTER_COMMAND) },
 ) {
     private val _ui = MutableStateFlow(HomeUi())
     val ui: StateFlow<HomeUi> = _ui
@@ -108,12 +121,26 @@ class HomeController(
         _ui.value = _ui.value.copy(busy = true, message = text(R.string.progress_running, commandText(command)), messageIsError = false)
         val outcome = execute(command) { p -> _ui.value = _ui.value.copy(message = progressText(p)) }
         val message = outcomeText(outcome)
-        val fresh = runCatching { refresh(RefreshTrigger.AFTER_COMMAND) }.getOrNull()
-        show(fresh ?: snapshot())
-        // A newer set point tapped while this command ran stays on screen until its own send.
+        snapshot()?.let { current ->
+            val next = current.afterOutcome(command, outcome, nowMs())
+            if (next != current) {
+                save(next)
+                show(next)
+            }
+        }
+        val done = outcome as? RouteOutcome.Done
+        val fleetOrWoken = done?.result == CommandResult.Ok &&
+            command.stateCode() != null &&
+            (done.channel == Channel.CLOUD || outcome.woke)
+        // The outcome replaces "running" before the follow-up waits, and each read updates the car data underneath.
         val pending = _ui.value.pendingTemp.takeUnless { command is VehicleCommand.SetTemp && it == command.celsius }
-        _ui.value = _ui.value.copy(busy = false, message = message, messageIsError = message != null, pendingTemp = pending,
+        _ui.value = _ui.value.copy(message = message, messageIsError = message != null, pendingTemp = pending,
             authRequired = _ui.value.authRequired || outcome == RouteOutcome.AuthRequired)
+        val fresh = runCatching {
+            refreshAfter(CommandFollowUp(command, fleetOrWoken)) { show(it) }
+        }.getOrNull()
+        show(fresh ?: snapshot())
+        _ui.value = _ui.value.copy(busy = false)
     }
 
     private fun show(s: Snapshot?) {

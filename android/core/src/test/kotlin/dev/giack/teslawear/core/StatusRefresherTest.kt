@@ -5,7 +5,9 @@ import dev.giack.teslawear.core.fleet.FleetResult
 import dev.giack.teslawear.core.setup.CarModel
 import dev.giack.teslawear.core.fleet.MemoryUsageStore
 import dev.giack.teslawear.core.usage.UsageCounts
+import dev.giack.teslawear.core.usage.UsageKind
 import dev.giack.teslawear.core.usage.UsageMeter
+import dev.giack.teslawear.protocol.VehicleCommand
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -215,5 +217,172 @@ class StatusRefresherTest {
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = 1))
         val result = StatusRefresher(FakeBle(), null, meter, store, nowMs = { now }).refresh(RefreshTrigger.BACKGROUND)
         assertEquals(snap(batteryPct = 50, updatedAtMs = 1), result)
+    }
+
+    // A wake or a command makes the stored fields stale even when the last check was moments ago.
+    @Test fun appOpenReadsAgainWithinTwoMinutesOfACommand() = runTest {
+        val stored = snap(locked = true, batteryPct = 50, updatedAtMs = now - 30_000)
+            .copy(checkedAtMs = now - 20_000)
+            .afterCommand(VehicleCommand.Unlock, now - 10_000, Channel.CLOUD)
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(locked = false, batteryPct = 80, updatedAtMs = now)) }
+        val ble = FakeBle(canWakeOverBle = true)
+        val result = refresher(ble, cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.APP_OPEN)!!
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(false, result.locked)
+        assertEquals(null, result.pendingCommand)
+        assertEquals(false, result.asleep)
+    }
+
+    @Test fun appOpenReadsAgainWithinTwoMinutesOfAWake() = runTest {
+        val stored = snap(batteryPct = 50, updatedAtMs = now - 3_600_000).copy(
+            asleep = false, checkedAtMs = now - 30_000, actedAtMs = now - 20_000,
+        )
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }
+        val result = refresher(FakeBle(canWakeOverBle = true), cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(80, result!!.batteryPct)
+        assertEquals(null, result.actedAtMs)
+    }
+
+    @Test fun appOpenSkipsOnceAReadHasLandedAfterTheWake() = runTest {
+        val stored = snap(batteryPct = 80, updatedAtMs = now - 30_000).copy(actedAtMs = now - 40_000, asleep = false)
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 10, updatedAtMs = now)) }
+        refresher(FakeBle(), cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.APP_OPEN)
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+    }
+
+    @Test fun readsNeverWakeTheCar() = runTest {
+        val triggers = listOf(
+            RefreshTrigger.APP_OPEN, RefreshTrigger.AFTER_COMMAND, RefreshTrigger.TILE_VIEW,
+            RefreshTrigger.BACKGROUND, RefreshTrigger.CONFIRM_SCREEN,
+        )
+        for (trigger in triggers) {
+            val ble = FakeBle(canWakeOverBle = true)
+            val cloud = FakeCloud()
+            val store = MemorySnapshots(snap(locked = true, batteryPct = 50, updatedAtMs = 1).copy(asleep = true))
+            refresher(ble, cloud, store).refresh(trigger, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))
+            assertEquals(0, cloud.api.wakes, trigger.name)
+            assertEquals(0, ble.bleWakes, trigger.name)
+        }
+    }
+
+    @Test fun followUpReplacesAStaleReadAndStops() = runTest {
+        val sleeps = mutableListOf<Long>()
+        val cloud = FakeCloud().apply {
+            api.scripted += FleetResult.Ok(snap(locked = true, batteryPct = 50, updatedAtMs = now))
+            api.scripted += FleetResult.Ok(snap(locked = false, batteryPct = 80, updatedAtMs = now + 3_000))
+            api.scripted += FleetResult.Ok(snap(locked = false, batteryPct = 81, updatedAtMs = now + 11_000))
+        }
+        val ble = FakeBle(canWakeOverBle = true)
+        val store = MemorySnapshots(snap(locked = true, batteryPct = 40, updatedAtMs = now - 60_000).copy(asleep = true)
+            .afterCommand(VehicleCommand.Unlock, now - 1_000, Channel.CLOUD))
+        val seen = mutableListOf<Snapshot>()
+        val result = StatusRefresher(ble, cloud, meter, store, nowMs = { now }, sleep = { sleeps += it })
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true), seen::add)!!
+        assertEquals(listOf(3_000L), sleeps)
+        assertEquals(2, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(false, result.locked)
+        assertEquals(80, result.batteryPct)
+        assertEquals(now + 3_000, result.updatedAtMs)
+        assertEquals(null, result.pendingCommand)
+        assertEquals(false, result.asleep)
+        assertEquals(listOf(50, 80), seen.map { it.batteryPct })
+        assertEquals(false, seen.first().locked)
+    }
+
+    @Test fun followUpStopsWhenTheFirstReadAlreadyMatches() = runTest {
+        val sleeps = mutableListOf<Long>()
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(locked = false, batteryPct = 80, updatedAtMs = now)) }
+        val store = MemorySnapshots(snap(locked = true, updatedAtMs = now - 60_000).afterCommand(VehicleCommand.Unlock, now, Channel.CLOUD))
+        val result = StatusRefresher(FakeBle(), cloud, meter, store, nowMs = { now }, sleep = { sleeps += it })
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(emptyList<Long>(), sleeps)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(false, result!!.locked)
+        assertEquals(null, result.pendingCommand)
+    }
+
+    @Test fun followUpStopsWhenTheBudgetIsExhausted() = runTest {
+        val tight = UsageMeter(MemoryUsageStore(), nowMs = { now }, budget = { UsageMeter.DATA_USD })
+        val cloud = FakeCloud().apply {
+            api.data = FleetResult.Ok(snap(locked = true, batteryPct = 55, updatedAtMs = now))
+            api.onData = { tight.record(UsageKind.DATA) }
+        }
+        val store = MemorySnapshots(snap(locked = true, batteryPct = 40, updatedAtMs = now - 60_000)
+            .afterCommand(VehicleCommand.Unlock, now, Channel.CLOUD))
+        val result = StatusRefresher(FakeBle(canWakeOverBle = true), cloud, tight, store, nowMs = { now }, sleep = {})
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))!!
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(false, result.locked)
+        assertEquals(55, result.batteryPct)
+        assertEquals("unlock", result.pendingCommand)
+        assertEquals(now, result.updatedAtMs)
+    }
+
+    @Test fun asleepDuringFollowUpDoesNotWake() = runTest {
+        val ble = FakeBle(canWakeOverBle = true)
+        val cloud = FakeCloud()
+        val store = MemorySnapshots(snap(locked = true, batteryPct = 40, updatedAtMs = now - 60_000).copy(asleep = true)
+            .afterCommand(VehicleCommand.Unlock, now, Channel.CLOUD))
+        val result = refresher(ble, cloud, store)
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))!!
+        assertEquals(3, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(false, result.locked)
+        assertEquals(false, result.asleep)
+        assertEquals("unlock", result.pendingCommand)
+        assertEquals(now - 60_000, result.updatedAtMs)
+    }
+
+    @Test fun bluetoothCommandDoesNotChase() = runTest {
+        val sleeps = mutableListOf<Long>()
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(locked = true, updatedAtMs = now)) }
+        val store = MemorySnapshots(snap(locked = true, updatedAtMs = now - 60_000).afterCommand(VehicleCommand.Unlock, now, Channel.BLE))
+        StatusRefresher(FakeBle(), cloud, meter, store, nowMs = { now }, sleep = { sleeps += it })
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = false))
+        assertEquals(1, cloud.api.dataCalls)
+        assertEquals(emptyList<Long>(), sleeps)
+        assertEquals(0, cloud.api.wakes)
+    }
+
+    @Test fun aStaleBluetoothReadDoesNotUndoTheCommandOrMarkTheCarAsleep() = runTest {
+        val ble = FakeBle(
+            reachable = true, canWakeOverBle = true,
+            status = snap(locked = true, batteryPct = 40, updatedAtMs = now, channel = Channel.BLE).copy(asleep = true),
+        )
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(locked = false, updatedAtMs = now)) }
+        val store = MemorySnapshots(snap(locked = true, batteryPct = 40, updatedAtMs = now - 60_000).copy(asleep = true)
+            .afterCommand(VehicleCommand.Unlock, now, Channel.CLOUD))
+        val result = refresher(ble, cloud, store)
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))!!
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(false, result.locked)
+        assertEquals(false, result.asleep)
+        assertEquals("unlock", result.pendingCommand)
+    }
+
+    @Test fun followUpPrefersBluetoothWhenTheCarIsInRange() = runTest {
+        val ble = FakeBle(reachable = true, canWakeOverBle = true, status = snap(locked = false, batteryPct = 70, updatedAtMs = now, channel = Channel.BLE))
+        val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(locked = true, updatedAtMs = now)) }
+        val store = MemorySnapshots(snap(locked = true, updatedAtMs = now - 60_000).afterCommand(VehicleCommand.Unlock, now, Channel.CLOUD))
+        val result = refresher(ble, cloud, store)
+            .refresh(RefreshTrigger.AFTER_COMMAND, CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true))
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(false, result!!.locked)
+        assertEquals(70, result.batteryPct)
+        assertEquals(Channel.BLE, result.channel)
     }
 }

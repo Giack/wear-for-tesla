@@ -17,7 +17,10 @@ import java.io.InterruptedIOException
 enum class Progress { WAKING_CAR }
 
 sealed interface RouteOutcome {
-    data class Done(val result: CommandResult, val channel: Channel) : RouteOutcome
+    /** The car was woken for this command, over Bluetooth or with Fleet `wake_up`. Reads never set this. */
+    val woke: Boolean get() = false
+
+    data class Done(val result: CommandResult, val channel: Channel, override val woke: Boolean = false) : RouteOutcome
     data object NoConnection : RouteOutcome
     data object Unreachable : RouteOutcome
     data object AuthRequired : RouteOutcome
@@ -69,8 +72,6 @@ class CommandRouter(
             sendOnceOnline(cloud, cmd, onProgress, skipBleWake, allowAsleepRetry = true)
         } catch (_: AuthRequiredException) {
             RouteOutcome.AuthRequired
-        } catch (e: FleetRejectedException) {
-            RouteOutcome.Done(CommandResult.Failed("Fleet API ${e.code}"), Channel.CLOUD)
         } catch (_: VehicleAsleepException) {
             RouteOutcome.Unreachable
         } catch (_: TransportUnavailableException) {
@@ -91,28 +92,42 @@ class CommandRouter(
         skipBleWake: Boolean,
         allowAsleepRetry: Boolean,
     ): RouteOutcome {
-        when (val ready = ensureAwake(cloud, onProgress, skipBleWake, forceWake = false)) {
-            null -> Unit
-            else -> return ready
+        val first = ensureAwake(cloud, onProgress, skipBleWake, forceWake = false)
+        val woke = when (first) {
+            is Awake.Ready -> first.woke
+            is Awake.Stop -> return first.outcome
         }
         return try {
-            RouteOutcome.Done(cloud.commands.execute(cmd), Channel.CLOUD)
+            done(cloud, cmd, woke)
         } catch (_: VehicleAsleepException) {
             if (!allowAsleepRetry) return RouteOutcome.Unreachable
-            when (val ready = ensureAwake(cloud, onProgress, skipBleWake, forceWake = true)) {
-                null -> Unit
-                else -> return ready
+            val again = ensureAwake(cloud, onProgress, skipBleWake, forceWake = true)
+            val wokeAgain = when (again) {
+                is Awake.Ready -> woke || again.woke
+                is Awake.Stop -> return again.outcome
             }
             try {
-                RouteOutcome.Done(cloud.commands.execute(cmd), Channel.CLOUD)
+                done(cloud, cmd, wokeAgain)
             } catch (_: VehicleAsleepException) {
                 RouteOutcome.Unreachable
             }
         }
     }
 
+    private suspend fun done(cloud: CloudLink, cmd: VehicleCommand, woke: Boolean): RouteOutcome = try {
+        RouteOutcome.Done(cloud.commands.execute(cmd), Channel.CLOUD, woke = woke)
+    } catch (e: FleetRejectedException) {
+        RouteOutcome.Done(CommandResult.Failed("Fleet API ${e.code}"), Channel.CLOUD, woke = woke)
+    }
+
+    /** The car is ready for the command, or the attempt stopped. [Awake.Ready.woke] is false when it was already online. */
+    private sealed interface Awake {
+        data class Ready(val woke: Boolean) : Awake
+        data class Stop(val outcome: RouteOutcome) : Awake
+    }
+
     /**
-     * Returns null once the car is online, or the outcome to report instead.
+     * Returns [Awake.Ready] once the car is online, or [Awake.Stop] with the outcome to report instead.
      * [forceWake] skips the "already online" short circuit: a 408 can arrive even when `state`
      * just said online (Tesla best practices), so the retry has to wake again.
      */
@@ -121,7 +136,7 @@ class CommandRouter(
         onProgress: (Progress) -> Unit,
         skipBleWake: Boolean,
         forceWake: Boolean,
-    ): RouteOutcome? {
+    ): Awake {
         if (!forceWake) {
             val state = try {
                 cloud.api.vehicleState(cloud.vin)
@@ -130,8 +145,8 @@ class CommandRouter(
                 null
             }
             when (state) {
-                is FleetResult.Ok -> if (state.value == "online") return null
-                is FleetResult.Error -> return RouteOutcome.Done(CommandResult.Failed("Fleet API ${state.code}"), Channel.CLOUD)
+                is FleetResult.Ok -> if (state.value == "online") return Awake.Ready(woke = false)
+                is FleetResult.Error -> return Awake.Stop(RouteOutcome.Done(CommandResult.Failed("Fleet API ${state.code}"), Channel.CLOUD))
                 FleetResult.Asleep, null -> Unit
             }
         }
@@ -140,9 +155,9 @@ class CommandRouter(
             if (skipBleWake) false else runCatching { ble.wakeIfNear() }.getOrDefault(false)
         }
         return when (waited) {
-            WakeWait.Online -> null
-            WakeWait.TimedOut -> RouteOutcome.Unreachable
-            is WakeWait.Rejected -> RouteOutcome.Done(CommandResult.Failed("Fleet API ${waited.code}"), Channel.CLOUD)
+            WakeWait.Online -> Awake.Ready(woke = true)
+            WakeWait.TimedOut -> Awake.Stop(RouteOutcome.Unreachable)
+            is WakeWait.Rejected -> Awake.Stop(RouteOutcome.Done(CommandResult.Failed("Fleet API ${waited.code}"), Channel.CLOUD))
         }
     }
 

@@ -2,6 +2,7 @@ package dev.giack.teslawear.ui
 
 import dev.giack.teslawear.R
 import dev.giack.teslawear.core.Channel
+import dev.giack.teslawear.core.CommandFollowUp
 import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.RefreshTrigger
 import dev.giack.teslawear.core.RouteOutcome
@@ -194,5 +195,46 @@ class HomeControllerTest {
         assertEquals(listOf(text(R.string.progress_running, text(R.string.command_unlock)), text(R.string.progress_waking_car)), messages)
         assertEquals(null, c.ui.value.message)
         assertFalse(c.ui.value.messageIsError)
+    }
+
+    @Test fun aSuccessfulCommandShowsTheExpectedStateBeforeTheReadReturns() = runTest {
+        var stored = snap.copy(asleep = true)
+        val saved = mutableListOf<Snapshot>()
+        val during = mutableListOf<Snapshot?>()
+        lateinit var c: HomeController
+        c = HomeController(
+            refresh = { stored },
+            snapshot = { stored },
+            execute = { _, _ -> RouteOutcome.Done(CommandResult.Ok, Channel.CLOUD, woke = true) },
+            usage = { UsageInfo(0.0, 10.0, BudgetLevel.OK) },
+            scope = this,
+            nowMs = { now },
+            save = { stored = it; saved += it },
+            refreshAfter = { follow, onUpdate ->
+                during += c.ui.value.snapshot
+                assertEquals(text(R.string.home_updated, text(R.string.age_minutes, 3)), c.ui.value.updated)
+                assertEquals(CommandFollowUp(VehicleCommand.Unlock, fleetOrWoken = true), follow)
+                val first = stored.copy(batteryPct = 70, updatedAtMs = now)
+                onUpdate(first)
+                during += c.ui.value.snapshot
+                val second = first.copy(batteryPct = 80, pendingCommand = null, actedAtMs = null)
+                onUpdate(second)
+                second
+            },
+        )
+        c.open()
+        c.send(QuickAction.LOCK)
+        assertEquals(false, saved.first().locked)
+        assertEquals(false, saved.first().asleep)
+        assertEquals(snap.updatedAtMs, saved.first().updatedAtMs)
+        // Shown before either follow-up read: expected lock, not asleep, age still the previous read.
+        assertEquals(false, during.first()?.locked)
+        assertEquals(false, during.first()?.asleep)
+        assertEquals(snap.updatedAtMs, during.first()?.updatedAtMs)
+        assertEquals(70, during[1]?.batteryPct)
+        assertEquals(80, c.ui.value.snapshot!!.batteryPct)
+        assertEquals(false, c.ui.value.snapshot!!.locked)
+        assertEquals(text(R.string.home_updated, text(R.string.age_now)), c.ui.value.updated)
+        assertFalse(c.ui.value.busy)
     }
 }

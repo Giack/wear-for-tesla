@@ -31,6 +31,8 @@ object SnapshotCodec {
         s.asleep?.let { put("asleep", JsonPrimitive(it)) }
         put("at", JsonPrimitive(s.updatedAtMs))
         s.checkedAtMs?.let { put("checked", JsonPrimitive(it)) }
+        s.actedAtMs?.let { put("acted", JsonPrimitive(it)) }
+        s.pendingCommand?.let { put("pending", JsonPrimitive(it)) }
         put("channel", JsonPrimitive(s.channel.name))
     }.toString()
 
@@ -43,6 +45,8 @@ object SnapshotCodec {
             windowsOpen = o.bool("windows"),
             trunkOpen = o.bool("trunk"), frunkOpen = o.bool("frunk"), asleep = o.bool("asleep"), updatedAtMs = o.getValue("at").jsonPrimitive.long,
             checkedAtMs = o["checked"]?.jsonPrimitive?.longOrNull,
+            actedAtMs = o["acted"]?.jsonPrimitive?.longOrNull,
+            pendingCommand = o["pending"]?.jsonPrimitive?.content,
             channel = Channel.valueOf(o.getValue("channel").jsonPrimitive.content),
         )
     }.getOrNull()
