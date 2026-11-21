@@ -58,7 +58,18 @@ jobs:
           # Refuse to publish an APK that is unsigned or fell back to the debug key. A bare "! grep"
           # never trips errexit, and the default shell has no pipefail, so both are explicit.
           set -o pipefail
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" | tee certs.txt
+          # The runner image ships more than one build-tools. A glob in the command position
+          # expands to every apksigner, and the first one treats the rest as arguments
+          # ("Unsupported command"). Take the newest version, and say so if there is none.
+          # `|| true`: with pipefail a missing directory fails the pipeline, and errexit would
+          # stop the step before the message below.
+          # shellcheck disable=SC2012 # version-sort the directory names; find does not
+          build_tools=$(ls -d "$ANDROID_HOME"/build-tools/*/ 2>/dev/null | sort -V | tail -1 || true)
+          if [[ -z "$build_tools" || ! -x "${build_tools}apksigner" ]]; then
+            echo "no apksigner under ${ANDROID_HOME}/build-tools" >&2
+            exit 1
+          fi
+          "${build_tools}apksigner" verify --print-certs "$apk" | tee certs.txt
           if grep -q "CN=Android Debug" certs.txt; then echo "APK is debug-signed"; exit 1; fi
           cp "$apk" "$RUNNER_TEMP/wear-for-tesla-$VERSION_NAME.apk"
 
