@@ -50,6 +50,7 @@ Bluetooth commands go through VCSEC. The watch asks the car to add its **BLE key
 The guide is at **[giack.github.io/wear-for-tesla](https://giack.github.io/wear-for-tesla/)**:
 
 - [Install the app](https://giack.github.io/wear-for-tesla/install/) on a Wear OS watch
+- [Free alternatives](https://giack.github.io/wear-for-tesla/alternatives/): Tessie, Teswear and Voltdeck, for a free Tesla app on Wear OS and Galaxy Watch
 - [Bluetooth mode](https://giack.github.io/wear-for-tesla/bluetooth-mode/): pair the watch with the Keycard
 - [Fleet mode](https://giack.github.io/wear-for-tesla/fleet-mode/): remote control with your own Developer app
 - [Fleet API budget](https://giack.github.io/wear-for-tesla/budget/)

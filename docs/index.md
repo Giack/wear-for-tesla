@@ -196,6 +196,8 @@ Lock and unlock, climate, sentry, frunk, trunk, charge port, start and stop char
 
 Remote control is a separate step, only if you want it. [Enable Fleet mode](fleet-mode.md).
 
+Looking for a free Tesla app for Wear OS, or a Tesla app for a Galaxy Watch? [Free alternatives](alternatives.md) compares this project with Tessie, Teswear and Voltdeck: price, Bluetooth and cloud, Tile, complications, climate, Sentry and how many cars.
+
 Something not working? See [troubleshooting](troubleshooting.md). Where the keys, tokens and the VIN live: [privacy](privacy.md).
 
 !!! warning "Not affiliated with Tesla, Inc. or Google LLC"
