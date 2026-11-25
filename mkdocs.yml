@@ -35,6 +35,7 @@ nav:
   - Install the app: install.md
   - Free alternatives: alternatives.md
   - Bluetooth mode: bluetooth-mode.md
+  - Tile: tile.md
   - Fleet mode: fleet-mode.md
   - Fleet API budget: budget.md
   - Troubleshooting: troubleshooting.md

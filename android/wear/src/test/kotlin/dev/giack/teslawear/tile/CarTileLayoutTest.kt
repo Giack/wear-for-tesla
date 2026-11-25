@@ -50,4 +50,83 @@ class CarTileLayoutTest {
         assertEquals(null, m.chip)
         assertTrue(m.buttons.isNotEmpty())
     }
+
+    @Test fun defaultTileLayoutIsLockClimateFrunkPort() {
+        val m = buildTileModel(null, nowMs = 0, meterLevel = BudgetLevel.OK)
+        assertEquals(
+            listOf(QuickAction.LOCK, QuickAction.CLIMATE, QuickAction.FRUNK, QuickAction.CHARGE_PORT),
+            m.buttons.map { it.action },
+        )
+        assertTrue(m.buttons.none { it.fleetOnly })
+    }
+
+    @Test fun tileLayoutForOneCommand() {
+        val m = buildTileModel(null, nowMs = 0, meterLevel = BudgetLevel.OK, commands = listOf(QuickAction.HORN))
+        assertEquals(listOf(TileButton(QuickAction.HORN, R.string.action_horn, active = false)), m.buttons)
+    }
+
+    @Test fun tileLayoutForTwoCommandsKeepsOrder() {
+        val s = Snapshot(locked = false, climateOn = true, updatedAtMs = 0, channel = Channel.BLE)
+        val m = buildTileModel(s, nowMs = 0, meterLevel = BudgetLevel.OK, commands = listOf(QuickAction.CLIMATE, QuickAction.LOCK))
+        assertEquals(
+            listOf(
+                TileButton(QuickAction.CLIMATE, R.string.action_climate, active = true),
+                TileButton(QuickAction.LOCK, R.string.tile_unlocked, active = false),
+            ),
+            m.buttons,
+        )
+    }
+
+    @Test fun tileLayoutForThreeCommands() {
+        val s = Snapshot(trunkOpen = true, windowsOpen = false, sentryOn = true, updatedAtMs = 0, channel = Channel.BLE)
+        val m = buildTileModel(
+            s, nowMs = 0, meterLevel = BudgetLevel.OK,
+            commands = listOf(QuickAction.TRUNK, QuickAction.WINDOWS, QuickAction.SENTRY),
+        )
+        assertEquals(
+            listOf(
+                TileButton(QuickAction.TRUNK, R.string.action_trunk, active = true),
+                TileButton(QuickAction.WINDOWS, R.string.action_windows, active = false),
+                TileButton(QuickAction.SENTRY, R.string.action_sentry, active = true),
+            ),
+            m.buttons,
+        )
+    }
+
+    @Test fun tileLayoutForFourCommandsMarksFleetOnly() {
+        val s = Snapshot(charging = true, updatedAtMs = 0, channel = Channel.CLOUD)
+        val m = buildTileModel(
+            s, nowMs = 0, meterLevel = BudgetLevel.OK,
+            commands = listOf(QuickAction.CHARGING, QuickAction.LIGHTS, QuickAction.UNLATCH_DOOR, QuickAction.HORN),
+        )
+        assertEquals(4, m.buttons.size)
+        assertEquals(
+            listOf(
+                TileButton(QuickAction.CHARGING, R.string.action_charging, active = true),
+                TileButton(QuickAction.LIGHTS, R.string.action_lights, active = false),
+                TileButton(QuickAction.UNLATCH_DOOR, R.string.action_door, active = false, fleetOnly = true),
+                TileButton(QuickAction.HORN, R.string.action_horn, active = false),
+            ),
+            m.buttons,
+        )
+    }
+
+    @Test fun tileLayoutDropsAnythingPastFour() {
+        val m = buildTileModel(
+            null, nowMs = 0, meterLevel = BudgetLevel.OK,
+            commands = listOf(QuickAction.LOCK, QuickAction.CLIMATE, QuickAction.FRUNK, QuickAction.CHARGE_PORT, QuickAction.HORN),
+        )
+        assertEquals(4, m.buttons.size)
+        assertTrue(m.buttons.none { it.action == QuickAction.HORN })
+    }
+
+    @Test fun everyCommandHasATileIcon() {
+        val registered = TileIds.icons.map { it.first }.toSet()
+        QuickAction.entries.forEach { action ->
+            assertTrue(action.name, TileIds.icon(action, locked = true) in registered)
+            assertTrue(action.name, TileIds.icon(action, locked = false) in registered)
+        }
+        assertEquals("ic_unlock", TileIds.icon(QuickAction.LOCK, locked = false))
+        assertEquals("ic_lock", TileIds.icon(QuickAction.LOCK, locked = true))
+    }
 }

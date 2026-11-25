@@ -83,6 +83,17 @@
     <string name="tile_locked">Chiusa</string>
     <string name="tile_unlocked">Aperta</string>
     <string name="tile_port">Porta</string>
+    <string name="tile_fleet_suffix">%1$s · Fleet</string>
+    <string name="tile_settings_title">Comandi del riquadro</string>
+    <string name="tile_settings_hint">Scegline fino a 4, da sinistra a destra. Il riquadro si aggiorna subito.</string>
+    <string name="tile_settings_on_tile">Sul riquadro</string>
+    <string name="tile_settings_add">Aggiungi un comando</string>
+    <string name="tile_settings_full">Quattro comandi selezionati</string>
+    <string name="tile_settings_empty">Nessun comando sul riquadro</string>
+    <string name="tile_settings_slot">%1$d · %2$s</string>
+    <string name="tile_move_up">Su</string>
+    <string name="tile_move_down">Giù</string>
+    <string name="tile_remove">Rimuovi</string>
 
     <string name="complication_battery_label">Batteria auto</string>
     <string name="complication_climate_label">Clima auto</string>
@@ -140,6 +151,7 @@
     <string name="pairing_not_yet">Chiave non ancora abbinata: riprova e appoggia subito la keycard</string>
 
     <string name="setup_title">Impostazioni</string>
+    <string name="setup_tile">Comandi del riquadro</string>
     <string name="setup_sign_in">Accedi a Tesla</string>
     <string name="setup_signed_in">✓ Accesso a Tesla</string>
     <string name="setup_pair_cloud_key">Abbina la chiave cloud</string>

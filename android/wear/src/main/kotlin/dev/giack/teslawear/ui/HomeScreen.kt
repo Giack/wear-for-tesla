@@ -182,7 +182,7 @@ private fun ActionGrid(
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
         actions.forEach { a ->
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                HoldToConfirmButton(iconFor(a, s), label(a), active = activeFor(a, s), size = 52.dp, enabled = !busy) { vm.send(a) }
+                HoldToConfirmButton(iconFor(a, s), label(a), active = actionActive(a, s), size = 52.dp, enabled = !busy) { vm.send(a) }
                 Text(
                     stringResource(actionName(a)), fontSize = 11.sp, color = TeslaColors.Muted, textAlign = TextAlign.Center, maxLines = 1,
                     modifier = Modifier.width(64.dp).padding(top = 3.dp),
@@ -197,20 +197,6 @@ private fun BatteryBar(pct: Int?) {
     Box(Modifier.width(110.dp).height(3.dp).background(TeslaColors.Chip, RoundedCornerShape(2.dp))) {
         Box(Modifier.fillMaxWidth((pct ?: 0) / 100f).height(3.dp).background(TeslaColors.Green, RoundedCornerShape(2.dp)))
     }
-}
-
-private fun activeFor(a: QuickAction, s: dev.giack.teslawear.core.Snapshot?): Boolean = when (a) {
-    QuickAction.LOCK -> s?.locked == true
-    QuickAction.CLIMATE -> s?.climateOn == true
-    QuickAction.CHARGE_PORT -> s?.chargePortOpen == true
-    QuickAction.TRUNK -> s?.trunkOpen == true
-    QuickAction.FRUNK -> s?.frunkOpen == true
-    QuickAction.WINDOWS -> s?.windowsOpen == true
-    QuickAction.LIGHTS -> false
-    QuickAction.HORN -> false
-    QuickAction.SENTRY -> s?.sentryOn == true
-    QuickAction.CHARGING -> s?.charging == true
-    QuickAction.UNLATCH_DOOR -> false
 }
 
 /** Cabin temperature and climate state from the car, plus the set point with ‹ › to change it. */

@@ -99,6 +99,17 @@
     <string name="tile_locked">Locked</string>
     <string name="tile_unlocked">Unlocked</string>
     <string name="tile_port">Port</string>
+    <string name="tile_fleet_suffix">%1$s · Fleet</string>
+    <string name="tile_settings_title">Tile commands</string>
+    <string name="tile_settings_hint">Pick up to 4, left to right. The Tile updates right away.</string>
+    <string name="tile_settings_on_tile">On the Tile</string>
+    <string name="tile_settings_add">Add a command</string>
+    <string name="tile_settings_full">Four commands selected</string>
+    <string name="tile_settings_empty">No commands on the Tile</string>
+    <string name="tile_settings_slot">%1$d · %2$s</string>
+    <string name="tile_move_up">Up</string>
+    <string name="tile_move_down">Down</string>
+    <string name="tile_remove">Remove</string>
 
     <!-- Complications -->
     <string name="complication_battery_label">Car battery</string>
@@ -160,6 +171,7 @@
 
     <!-- Settings -->
     <string name="setup_title">Settings</string>
+    <string name="setup_tile">Tile commands</string>
     <string name="setup_sign_in">Sign in to Tesla</string>
     <string name="setup_signed_in">✓ Signed in to Tesla</string>
     <string name="setup_pair_cloud_key">Pair the cloud key</string>

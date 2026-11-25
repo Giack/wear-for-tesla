@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                     val onboardingUi by onboarding.ui.collectAsState()
                     var showSetup by remember { mutableStateOf(false) }
                     var showAbout by remember { mutableStateOf(false) }
+                    var showTile by remember { mutableStateOf(false) }
                     val onboarded = onboardingUi.step == OnboardingStep.DONE
                     // onResume opens Home on every launch; this covers only onboarding finishing on screen.
                     var wasOnboarded by remember { mutableStateOf(onboarded) }
@@ -48,16 +49,19 @@ class MainActivity : ComponentActivity() {
                         if (wasInSetup && !showSetup && onboarded) home.reloadFrames()
                         wasInSetup = showSetup
                     }
-                    BackHandler(enabled = onboarded && showSetup && !showAbout) { showSetup = false }
+                    BackHandler(enabled = showTile) { showTile = false }
+                    BackHandler(enabled = onboarded && showSetup && !showAbout && !showTile) { showSetup = false }
                     BackHandler(enabled = showAbout) { showAbout = false }
                     when {
                         !onboarded -> OnboardingScreen(onboarding)
+                        showTile -> TileCommandsScreen()
                         showAbout -> AboutScreen()
                         // Fleet mode needs the Tesla login before Home can read anything remotely.
                         showSetup || (setupUi.fleet && !setupUi.loggedIn) || homeUi.authRequired -> SetupScreen(setup, onCarRemoved = {
                             showSetup = false
+                            showTile = false
                             onboarding.reload()
-                        }, onOpenAbout = { showAbout = true })
+                        }, onOpenAbout = { showAbout = true }, onOpenTile = { showTile = true })
                         else -> HomeScreen(home, onOpenSetup = { showSetup = true })
                     }
                 }

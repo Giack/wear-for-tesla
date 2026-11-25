@@ -217,7 +217,12 @@ class SetupViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 @Composable
-fun SetupScreen(vm: SetupViewModel = viewModel(), onCarRemoved: () -> Unit = {}, onOpenAbout: () -> Unit = {}) {
+fun SetupScreen(
+    vm: SetupViewModel = viewModel(),
+    onCarRemoved: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
+    onOpenTile: () -> Unit = {},
+) {
     val ui by vm.ui.collectAsState()
     // Opening Setup from Home is no activity resume: re-read usage and state so they match Home.
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.reload() }
@@ -226,6 +231,11 @@ fun SetupScreen(vm: SetupViewModel = viewModel(), onCarRemoved: () -> Unit = {},
     ScreenScaffold(scrollState = state) { padding ->
         TransformingLazyColumn(state = state, contentPadding = padding) {
             item { ListHeader { Text(stringResource(R.string.setup_title)) } }
+            item {
+                Button(onClick = onOpenTile, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.setup_tile), maxLines = 1)
+                }
+            }
             // Fleet mode (credentials pushed from the Mac): Tesla login, Cloud key pairing, budget.
             if (ui.fleet) {
                 item {
