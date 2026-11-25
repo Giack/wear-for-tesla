@@ -17,6 +17,8 @@ Short text and icon slots are both offered. Those are the slots the usual watch 
 
 **Car climate** is the temperature. **Climate** is the on/off shortcut. Lock status and **Lock** show the same words. Lock status only opens the app. **Lock** opens hold to confirm, and that screen names the exact action (lock or unlock) before anything is sent.
 
+![Utility watch face with Sentry, lock status and climate](assets/screens/complications.png)
+
 ## No data, or the car is asleep
 
 A dash means the watch is not claiming a state. That is what you see before the first reading, when a field was never reported, and when the car is asleep. Lock, climate and sentry from before the car fell asleep stay hidden: that reading can be wrong, and a complication will not show it as current. The icon is a dash as well, not a closed lock, a fan or a shield.
