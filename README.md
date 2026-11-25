@@ -27,7 +27,7 @@ The download is the signed Wear OS package from the latest GitHub Release (`wear
   </tr>
 </table>
 
-Lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn and unlatch the driver door. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. Sentry and charging go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode: the Bluetooth key is a driver key, and the car refuses that command for the role. The app never wakes the car just to read it.
+Lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn and unlatch the driver door. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. The Tile shows up to four of those commands, in an order you set under **Settings → Tile commands**. Until you change it, the Tile keeps lock, climate, frunk and the charge port. Sentry and charging go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode: the Bluetooth key is a driver key, and the car refuses that command for the role. The Tile marks that command. Showing the Tile never wakes the car. The app never wakes the car just to read it.
 
 ## Why the watch has its own BLE key
 
@@ -52,6 +52,7 @@ The guide is at **[giack.github.io/wear-for-tesla](https://giack.github.io/wear-
 - [Install the app](https://giack.github.io/wear-for-tesla/install/) on a Wear OS watch
 - [Free alternatives](https://giack.github.io/wear-for-tesla/alternatives/): Tessie, Teswear and Voltdeck, for a free Tesla app on Wear OS and Galaxy Watch
 - [Bluetooth mode](https://giack.github.io/wear-for-tesla/bluetooth-mode/): pair the watch with the Keycard
+- [Tile](https://giack.github.io/wear-for-tesla/tile/): choose up to four commands and their order
 - [Fleet mode](https://giack.github.io/wear-for-tesla/fleet-mode/): remote control with your own Developer app
 - [Fleet API budget](https://giack.github.io/wear-for-tesla/budget/)
 - [Troubleshooting](https://giack.github.io/wear-for-tesla/troubleshooting/)

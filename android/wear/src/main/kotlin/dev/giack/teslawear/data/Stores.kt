@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.Snapshot
 import dev.giack.teslawear.core.SnapshotRepository
+import dev.giack.teslawear.core.TileCommandStore
+import dev.giack.teslawear.core.TileCommands
 import dev.giack.teslawear.core.fleet.RegionStore
 import dev.giack.teslawear.core.fleet.TokenStore
 import okhttp3.HttpUrl
@@ -149,4 +152,21 @@ class PrefsVehicleKeyPins(context: Context) : VehicleKeyPins {
     }
 
     fun clear() = prefs.edit().clear().apply()
+}
+
+/** The Tile's commands. Absent until the user changes them, so an existing install keeps the default. */
+class PrefsTileCommandStore(context: Context) : TileCommandStore {
+    private val prefs = context.getSharedPreferences("tile_commands", Context.MODE_PRIVATE)
+
+    override fun load(): List<QuickAction>? =
+        if (!prefs.contains(KEY)) null else TileCommands.decode(prefs.getString(KEY, "").orEmpty())
+
+    override fun save(actions: List<QuickAction>) {
+        // commit, not apply: the Tile reads this in the same moment the screen asks it to redraw.
+        prefs.edit().putString(KEY, TileCommands.encode(actions)).commit()
+    }
+
+    private companion object {
+        const val KEY = "commands"
+    }
 }

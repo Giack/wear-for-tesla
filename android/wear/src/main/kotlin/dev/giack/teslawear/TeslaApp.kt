@@ -9,6 +9,7 @@ import dev.giack.teslawear.core.CloudLink
 import dev.giack.teslawear.core.CommandRouter
 import dev.giack.teslawear.core.Snapshot
 import dev.giack.teslawear.core.StatusRefresher
+import dev.giack.teslawear.core.TileCommandSelection
 import dev.giack.teslawear.core.fleet.FleetApiClient
 import dev.giack.teslawear.core.fleet.FleetCarConfig
 import dev.giack.teslawear.core.fleet.FleetTransport
@@ -24,6 +25,7 @@ import dev.giack.teslawear.data.PrefsRegionStore
 import dev.giack.teslawear.data.PrefsSessionCache
 import dev.giack.teslawear.data.PrefsSetupStore
 import dev.giack.teslawear.data.PrefsBudgetStore
+import dev.giack.teslawear.data.PrefsTileCommandStore
 import dev.giack.teslawear.data.PrefsUsageStore
 import dev.giack.teslawear.data.PrefsVehicleKeyPins
 import dev.giack.teslawear.data.SecretsStore
@@ -55,6 +57,7 @@ val Context.graph: AppGraph get() = (applicationContext as TeslaApp).graph
 class AppGraph(private val context: Context) {
     val secretsStore = SecretsStore(context)
     val setup = Setup(PrefsSetupStore(context))
+    val tileCommands = TileCommandSelection(PrefsTileCommandStore(context))
     val http: OkHttpClient = OkHttpClient.Builder().callTimeout(30, TimeUnit.SECONDS).build()
     val budget = PrefsBudgetStore(context)
     val meter = UsageMeter(PrefsUsageStore(context), budget = budget::load)

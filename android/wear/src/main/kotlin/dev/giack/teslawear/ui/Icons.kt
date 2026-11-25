@@ -5,6 +5,21 @@ import dev.giack.teslawear.R
 import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.Snapshot
 
+/** Whether the button shows the "on" colour. Lights, horn and the door have no lasting state. */
+fun actionActive(action: QuickAction, snapshot: Snapshot?): Boolean = when (action) {
+    QuickAction.LOCK -> snapshot?.locked == true
+    QuickAction.CLIMATE -> snapshot?.climateOn == true
+    QuickAction.CHARGE_PORT -> snapshot?.chargePortOpen == true
+    QuickAction.TRUNK -> snapshot?.trunkOpen == true
+    QuickAction.FRUNK -> snapshot?.frunkOpen == true
+    QuickAction.WINDOWS -> snapshot?.windowsOpen == true
+    QuickAction.LIGHTS -> false
+    QuickAction.HORN -> false
+    QuickAction.SENTRY -> snapshot?.sentryOn == true
+    QuickAction.CHARGING -> snapshot?.charging == true
+    QuickAction.UNLATCH_DOOR -> false
+}
+
 /** Line icon for an action; the lock icon follows the current state. */
 @DrawableRes
 fun iconFor(action: QuickAction, snapshot: Snapshot? = null): Int = when (action) {

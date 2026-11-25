@@ -26,7 +26,10 @@ class CarTileService : TileService() {
         SuspendToFutureAdapter.launchFuture(Dispatchers.Default) {
             val graph = applicationContext.graph
             val snapshot = graph.snapshots.load()
-            val model = buildTileModel(snapshot, System.currentTimeMillis(), graph.meter.level(), graph.setup.state.profile?.model)
+            val commands = graph.tileCommands.selected()
+            val model = buildTileModel(
+                snapshot, System.currentTimeMillis(), graph.meter.level(), graph.setup.state.profile?.model, commands,
+            )
             scope.launch {
                 // Screen off: Android returns nothing to a scan, so the radio time would be wasted.
                 if (getSystemService(PowerManager::class.java)?.isInteractive != true) return@launch
@@ -47,11 +50,7 @@ class CarTileService : TileService() {
             ResourceBuilders.Resources.Builder()
                 .setVersion(resourcesVersion())
                 .addIdToImageMapping(TileIds.CAR, render?.let(::inlineImage) ?: image(R.drawable.car_silhouette))
-                .addIdToImageMapping("ic_lock", image(R.drawable.ic_lock))
-                .addIdToImageMapping("ic_unlock", image(R.drawable.ic_unlock))
-                .addIdToImageMapping("ic_fan", image(R.drawable.ic_fan))
-                .addIdToImageMapping("ic_frunk", image(R.drawable.ic_frunk))
-                .addIdToImageMapping("ic_plug", image(R.drawable.ic_plug))
+                .apply { TileIds.icons.forEach { (id, res) -> addIdToImageMapping(id, image(res)) } }
                 .build()
         }
 
@@ -60,8 +59,11 @@ class CarTileService : TileService() {
         super.onDestroy()
     }
 
-    private fun resourcesVersion() =
-        if (applicationContext.graph.carImages.hasFrames) applicationContext.graph.carImages.version else RESOURCES_VERSION
+    private fun resourcesVersion(): String {
+        val pictures = if (applicationContext.graph.carImages.hasFrames) applicationContext.graph.carImages.version else RESOURCES_VERSION
+        // The picture version does not change when a new command icon is added, so the icon set is part of the id.
+        return "$pictures-$ICON_SET"
+    }
 
     private fun inlineImage(png: ByteArray) = ResourceBuilders.ImageResource.Builder()
         .setInlineResource(
@@ -81,6 +83,7 @@ class CarTileService : TileService() {
 
     companion object {
         private const val RESOURCES_VERSION = "1"
+        private const val ICON_SET = "icons2"
         // No periodic requests: it scanned every 15 min day and night, mostly with the screen off.
         // The app and the background check push new state through requestRefresh.
         private const val FRESHNESS_MS = 0L

@@ -22,6 +22,24 @@ class StatusRefresherTest {
         return StatusRefresher(ble, cloud, m, store, nowMs = { clock }, sleep = { clock += it })
     }
 
+    // Showing or opening the Tile must not wake the car. A manual refresh is the path that may.
+    @Test fun tileRefreshNeverCallsWakeUp() = runTest {
+        val cloud = FakeCloud().apply {
+            api.states += FleetResult.Ok("asleep")
+            api.states += FleetResult.Ok("online")
+            api.data = FleetResult.Asleep
+            api.dataAfterWake = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now))
+        }
+        val ble = FakeBle(reachable = true, canWakeOverBle = true)
+        val stored = snap(batteryPct = 40, updatedAtMs = now - 10 * 60_000)
+        val result = refresher(ble, cloud, MemorySnapshots(stored)).refresh(RefreshTrigger.TILE_VIEW)
+        assertEquals(0, cloud.api.wakes)
+        assertEquals(0, ble.bleWakes)
+        assertEquals(0, cloud.api.dataCalls)
+        assertEquals(0, cloud.api.stateReads)
+        assertEquals(stored.batteryPct, result!!.batteryPct)
+    }
+
     @Test fun tileRefreshNeverUsesCloud() = runTest {
         val store = MemorySnapshots(snap(batteryPct = 50, updatedAtMs = now - 10 * 60_000))
         val cloud = FakeCloud().apply { api.data = FleetResult.Ok(snap(batteryPct = 80, updatedAtMs = now)) }

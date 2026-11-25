@@ -18,20 +18,38 @@ import dev.giack.teslawear.core.QuickAction
 import dev.giack.teslawear.core.Snapshot
 import dev.giack.teslawear.core.setup.CarModel
 import dev.giack.teslawear.core.usage.BudgetLevel
+import dev.giack.teslawear.core.TileCommands
 import dev.giack.teslawear.ui.MainActivity
 import dev.giack.teslawear.ui.UiText
+import dev.giack.teslawear.ui.actionActive
 import dev.giack.teslawear.ui.actionName
 import dev.giack.teslawear.ui.modelName
 import dev.giack.teslawear.ui.text
 import kotlin.math.roundToInt
 
-data class TileButton(val action: QuickAction, @StringRes val label: Int, val active: Boolean)
+data class TileButton(
+    val action: QuickAction,
+    @StringRes val label: Int,
+    val active: Boolean,
+    /** Driver-door unlatch: the Tile marks it, and the command still goes through the usual confirmation. */
+    val fleetOnly: Boolean = false,
+)
 
 /** [chip] is the channel of the last reading, null before the first one. */
 data class TileModel(@StringRes val title: Int, @StringRes val chip: Int?, val line: UiText, val buttons: List<TileButton>)
 
-/** What the Tile shows; reads only the stored snapshot (never the network). */
-fun buildTileModel(snapshot: Snapshot?, nowMs: Long, meterLevel: BudgetLevel, model: CarModel? = null): TileModel {
+/**
+ * What the Tile shows; reads only the stored snapshot (never the network, never a wake).
+ * [commands] is the user's order. Omitted, it is today's default, so existing callers stay put.
+ * More than four, or a repeat, is dropped here as well as at save time.
+ */
+fun buildTileModel(
+    snapshot: Snapshot?,
+    nowMs: Long,
+    meterLevel: BudgetLevel,
+    model: CarModel? = null,
+    commands: List<QuickAction> = TileCommands.DEFAULT,
+): TileModel {
     val s = snapshot
     val line = if (s == null) {
         text(R.string.tile_open_app)
@@ -46,17 +64,20 @@ fun buildTileModel(snapshot: Snapshot?, nowMs: Long, meterLevel: BudgetLevel, mo
         title = modelName(model),
         chip = when (s?.channel) { Channel.BLE -> R.string.channel_ble; Channel.CLOUD -> R.string.channel_cloud; null -> null },
         line = line,
-        buttons = listOf(
-            TileButton(
-                QuickAction.LOCK,
-                when (s?.locked) { true -> R.string.tile_locked; false -> R.string.tile_unlocked; null -> actionName(QuickAction.LOCK) },
-                s?.locked == true,
-            ),
-            TileButton(QuickAction.CLIMATE, actionName(QuickAction.CLIMATE), s?.climateOn == true),
-            TileButton(QuickAction.FRUNK, actionName(QuickAction.FRUNK), s?.frunkOpen == true),
-            TileButton(QuickAction.CHARGE_PORT, R.string.tile_port, s?.chargePortOpen == true),
-        ),
+        buttons = TileCommands.sanitize(commands).map { action ->
+            TileButton(action, tileLabel(action, s), actionActive(action, s), action.requiresFleet)
+        },
     )
+}
+
+private fun tileLabel(action: QuickAction, snapshot: Snapshot?): Int = when (action) {
+    QuickAction.LOCK -> when (snapshot?.locked) {
+        true -> R.string.tile_locked
+        false -> R.string.tile_unlocked
+        null -> actionName(QuickAction.LOCK)
+    }
+    QuickAction.CHARGE_PORT -> R.string.tile_port
+    else -> actionName(action)
 }
 
 internal object TileIds {
@@ -66,8 +87,30 @@ internal object TileIds {
         QuickAction.CLIMATE -> "ic_fan"
         QuickAction.FRUNK -> "ic_frunk"
         QuickAction.CHARGE_PORT -> "ic_plug"
-        else -> "ic_lock"
+        QuickAction.TRUNK -> "ic_trunk"
+        QuickAction.WINDOWS -> "ic_vent"
+        QuickAction.LIGHTS -> "ic_light"
+        QuickAction.HORN -> "ic_horn"
+        QuickAction.SENTRY -> "ic_sentry"
+        QuickAction.CHARGING -> "ic_battery"
+        QuickAction.UNLATCH_DOOR -> "ic_door"
     }
+
+    /** Every id [icon] can return, so the Tile service registers the matching drawable. */
+    val icons: List<Pair<String, Int>> = listOf(
+        "ic_lock" to R.drawable.ic_lock,
+        "ic_unlock" to R.drawable.ic_unlock,
+        "ic_fan" to R.drawable.ic_fan,
+        "ic_frunk" to R.drawable.ic_frunk,
+        "ic_plug" to R.drawable.ic_plug,
+        "ic_trunk" to R.drawable.ic_trunk,
+        "ic_vent" to R.drawable.ic_vent,
+        "ic_light" to R.drawable.ic_light,
+        "ic_horn" to R.drawable.ic_horn,
+        "ic_sentry" to R.drawable.ic_sentry,
+        "ic_battery" to R.drawable.ic_battery,
+        "ic_door" to R.drawable.ic_door,
+    )
 }
 
 private const val INK = 0xFFF4F4F5.toInt()
@@ -117,7 +160,8 @@ fun carTileLayout(context: Context, model: TileModel, locked: Boolean?): LayoutE
 }
 
 private fun button(context: Context, b: TileButton, iconId: String): LayoutElement {
-    val label = context.getString(b.label)
+    val name = context.getString(b.label)
+    val label = if (b.fleetOnly) context.getString(R.string.tile_fleet_suffix, name) else name
     val circle = LayoutElementBuilders.Box.Builder()
         .setWidth(dp(48f)).setHeight(dp(48f))
         .setModifiers(
