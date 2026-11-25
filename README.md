@@ -27,7 +27,7 @@ The download is the signed Wear OS package from the latest GitHub Release (`wear
   </tr>
 </table>
 
-Lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn and unlatch the driver door. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. The Tile shows up to four of those commands, in an order you set under **Settings → Tile commands**. Until you change it, the Tile keeps lock, climate, frunk and the charge port. Sentry and charging go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode: the Bluetooth key is a driver key, and the car refuses that command for the role. The Tile marks that command. Showing the Tile never wakes the car. The app never wakes the car just to read it.
+Lock, climate, sentry, frunk, trunk, charge port, start and stop charging, windows, lights, horn and unlatch the driver door. Every command, from the app or the Tile, needs **hold to confirm** and shows how old the known state is. The Tile shows up to four of those commands, in an order you set under **Settings → Tile commands**. Until you change it, the Tile keeps lock, climate, frunk and the charge port. Watch-face complications show battery, climate and lock, plus shortcuts for lock, climate and Sentry. A shortcut opens hold to confirm and does not send the command on its own. Sentry and charging go over Bluetooth when the car is near. Unlatching the driver door needs Fleet mode: the Bluetooth key is a driver key, and the car refuses that command for the role. The Tile marks that command. Showing the Tile or a complication never wakes the car. The app never wakes the car just to read it.
 
 ## Why the watch has its own BLE key
 

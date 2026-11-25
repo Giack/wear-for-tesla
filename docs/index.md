@@ -156,7 +156,7 @@ Every command, from the app or the Tile, waits until you hold and the ring fills
 
 ### Tile and complications
 
-Add the Tile for battery, range and up to four commands without opening the app. [Tile commands](tile.md) in Settings chooses which commands and their order. Until you change it, the Tile keeps lock, climate, frunk and the charge port. Watch-face complications show the battery and the climate. The Tile reads over Bluetooth and does not wake the car.
+Add the Tile for battery, range and up to four commands without opening the app. [Tile commands](tile.md) in Settings chooses which commands and their order. Until you change it, the Tile keeps lock, climate, frunk and the charge port. [Complications](complications.md) show the battery, the climate, the lock, and shortcuts for lock, climate and Sentry. A shortcut opens hold to confirm. The Tile and the complications read the stored snapshot and do not wake the car.
 
 </article>
 

@@ -101,6 +101,18 @@
     <string name="complication_climate_description">Clima %1$s</string>
     <string name="complication_on">ON</string>
     <string name="complication_off">OFF</string>
+    <string name="complication_lock_status_label">Stato blocco</string>
+    <string name="complication_lock_status_description">Stato blocco, %1$s</string>
+    <string name="complication_command_lock_label">Blocco</string>
+    <string name="complication_command_climate_label">Clima</string>
+    <string name="complication_command_sentry_label">Sentinella</string>
+    <string name="complication_command_lock_description">Blocco, %1$s</string>
+    <string name="complication_command_climate_description">Clima, %1$s</string>
+    <string name="complication_command_sentry_description">Sentinella, %1$s</string>
+    <string name="complication_locked">Chiusa</string>
+    <string name="complication_unlocked">Aperta</string>
+    <string name="complication_no_data">Nessun dato</string>
+    <string name="complication_asleep">In sospensione</string>
 
     <string name="profile_model">Modello: %1$s</string>
     <string name="profile_paint">Colore: %1$s</string>
