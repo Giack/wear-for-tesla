@@ -118,6 +118,18 @@
     <string name="complication_climate_description">Climate %1$s</string>
     <string name="complication_on">ON</string>
     <string name="complication_off">OFF</string>
+    <string name="complication_lock_status_label">Lock status</string>
+    <string name="complication_lock_status_description">Lock status, %1$s</string>
+    <string name="complication_command_lock_label">Lock</string>
+    <string name="complication_command_climate_label">Climate</string>
+    <string name="complication_command_sentry_label">Sentry</string>
+    <string name="complication_command_lock_description">Lock, %1$s</string>
+    <string name="complication_command_climate_description">Climate, %1$s</string>
+    <string name="complication_command_sentry_description">Sentry, %1$s</string>
+    <string name="complication_locked">Locked</string>
+    <string name="complication_unlocked">Unlocked</string>
+    <string name="complication_no_data">No data</string>
+    <string name="complication_asleep">Asleep</string>
 
     <!-- Car profile -->
     <string name="profile_model">Model: %1$s</string>

@@ -20,4 +20,4 @@ Opening or showing the Tile does not wake the car. It reads the state already on
 
 ## Complications
 
-Watch-face complications are separate. **Car battery** and **Car climate** are added from the watch face editor, not from this screen.
+Watch-face complications are separate. **Car battery**, **Car climate**, **Lock status**, **Lock**, **Climate** and **Sentry** are added from the watch face editor, not from this screen. The [Complications](complications.md) page is the detail.
